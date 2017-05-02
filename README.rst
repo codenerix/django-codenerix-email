@@ -23,7 +23,7 @@ Quickstart
     For python 2: sudo pip2 install django-codenerix-email
     For python 3: sudo pip3 install django-codenerix-email
 
-2. Add "codenerix_extensions" to your INSTALLED_APPS setting like this::
+2. Add "codenerix_extensions" and "codenerix_email" to your INSTALLED_APPS setting like this::
 
     INSTALLED_APPS = [
         ...
@@ -44,7 +44,7 @@ Commercial support
 ******************
 
 This project is backed by `Centrologic <http://www.centrologic.com/>`_. You can discover more in `CODENERIX.com <http://www.codenerix.com/>`_.
-If you need help implementing or hosting django-codenerix-extensions, please contact us:
+If you need help implementing or hosting django-codenerix-email, please contact us:
 http://www.centrologic.com/contacto/
 
 .. image:: http://www.centrologic.com/wp-content/uploads/2015/09/logo-centrologic.png
