@@ -1,0 +1,6 @@
+include MANIFEST.in
+include LICENSE
+include README.rst
+exclude *.pyc
+recursive-include codenerix_email/management *
+recursive-include codenerix_email/migrations *
