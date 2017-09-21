@@ -185,7 +185,7 @@ class EmailTemplate(CodenerixModel):
 
 
 class GenText(CodenerixModel):  # META: Abstract class
-    class Meta:
+    class Meta(CodenerixModel.Meta):
         abstract = True
 
     subject = models.TextField(_('Subject'), blank=True, null=False)
