@@ -72,7 +72,7 @@ class EmailMessage(CodenerixModel):
         # Get connection
         return get_connection(host=host, port=port, username=username, password=password, use_tls=use_tls)
     
-    def send(self, connection=None, legacy=False):
+    def send(self, connection=None, legacy=False, silent=True):
         # Get connection if not connected yet
         if connection is None:
             # Connect
@@ -80,40 +80,51 @@ class EmailMessage(CodenerixModel):
         
         if self.eto:
             # Manually open the connection
-            connection.open()
-            email = EM(self.subject, self.body, self.efrom, [self.eto], connection=connection)
-            for at in self.attachments.all():
-                with open(at.path) as f:
-                    email.attach(at.filename, f.read(), at.mime)
-            
-            # send list emails
-            retries = 1
-            for t in range(0, retries + 1):
-                try:
-                    if connection.send_messages([email]):
-                        # We are done
-                        self.sent = True
-                        self.sending = False
-                        break
-                except ssl.SSLError as e:
-                    self.log += "SSLError: {}\n".format(e)
-                except smtplib.SMTPServerDisconnected as e:
-                    self.log += "SMTPServerDisconnected: {}\n".format(e)
-                except smtplib.SMTPException as e:
-                    self.log += "SMTPException: {}\n".format(e)
-                finally:
-                    # Check if this is the last try
-                    if t == retries:
-                        # We will not retry anymore
-                        self.sending = False
-                        # We make lower this email's priority
-                        self.priority += 1
-                    # Save the email
-                    self.save()
-                    # Disconnect
-                    connection.close()
-                    # Connect
-                    connection = self.connect(legacy)
+            try:
+                connection.open()
+            except smtplib.SMTPAuthenticationError as e:
+                connection = None
+                if self.log is None:
+                    self.log = ''
+                self.log += u"SMTPAuthenticationError: {}\n".format(e)
+                self.save()
+                if not silent:
+                    raise
+
+            if connection:
+                email = EM(self.subject, self.body, self.efrom, [self.eto], connection=connection)
+                for at in self.attachments.all():
+                    with open(at.path) as f:
+                        email.attach(at.filename, f.read(), at.mime)
+                
+                # send list emails
+                retries = 1
+                for t in range(0, retries + 1):
+                    try:
+                        if connection.send_messages([email]):
+                            # We are done
+                            self.sent = True
+                            self.sending = False
+                            break
+                    except ssl.SSLError as e:
+                        self.log += "SSLError: {}\n".format(e)
+                    except smtplib.SMTPServerDisconnected as e:
+                        self.log += "SMTPServerDisconnected: {}\n".format(e)
+                    except smtplib.SMTPException as e:
+                        self.log += "SMTPException: {}\n".format(e)
+                    finally:
+                        # Check if this is the last try
+                        if t == retries:
+                            # We will not retry anymore
+                            self.sending = False
+                            # We make lower this email's priority
+                            self.priority += 1
+                        # Save the email
+                        self.save()
+                        # Disconnect
+                        connection.close()
+                        # Connect
+                        connection = self.connect(legacy)
 
 
 class EmailAttachment(CodenerixModel):
