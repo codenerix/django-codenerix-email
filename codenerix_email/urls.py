@@ -23,10 +23,10 @@ from codenerix_email.views import EmailTemplateList, EmailTemplateCreate, EmailT
 
 
 urlpatterns = [
-    url(r'^emailtemplates$', EmailTemplateList.as_view(), name='CDNX_products_emailtemplates_list'),
-    url(r'^emailtemplates/add$', EmailTemplateCreate.as_view(), name='CDNX_products_emailtemplates_add'),
-    url(r'^emailtemplates/addmodal$', EmailTemplateCreateModal.as_view(), name='CDNX_products_emailtemplates_addmodal'),
-    url(r'^emailtemplates/(?P<pk>\w+)/edit$', EmailTemplateUpdate.as_view(), name='CDNX_products_emailtemplates_edit'),
-    url(r'^emailtemplates/(?P<pk>\w+)/editmodal$', EmailTemplateUpdateModal.as_view(), name='CDNX_products_emailtemplates_editmodal'),
-    url(r'^emailtemplates/(?P<pk>\w+)/delete$', EmailTemplateDelete.as_view(), name='CDNX_products_emailtemplates_delete'),
+    url(r'^emailtemplates$', EmailTemplateList.as_view(), name='CDNX_emails_emailtemplates_list'),
+    url(r'^emailtemplates/add$', EmailTemplateCreate.as_view(), name='CDNX_emails_emailtemplates_add'),
+    url(r'^emailtemplates/addmodal$', EmailTemplateCreateModal.as_view(), name='CDNX_emails_emailtemplates_addmodal'),
+    url(r'^emailtemplates/(?P<pk>\w+)/edit$', EmailTemplateUpdate.as_view(), name='CDNX_emails_emailtemplates_edit'),
+    url(r'^emailtemplates/(?P<pk>\w+)/editmodal$', EmailTemplateUpdateModal.as_view(), name='CDNX_emails_emailtemplates_editmodal'),
+    url(r'^emailtemplates/(?P<pk>\w+)/delete$', EmailTemplateDelete.as_view(), name='CDNX_emails_emailtemplates_delete'),
 ]
