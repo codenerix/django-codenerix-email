@@ -1,9 +1,10 @@
 <td>
     <span class='fa fa-refresh fa-spin fa-fw text-info' ng-if='row.sending' alt='{{data.meta.gentranslate.sending}}...' title='{{data.meta.gentranslate.sending}}...'></span>
     <span class='fa fa-envelope-o text-success' ng-if='!row.sending && row.sent' alt='{{data.meta.gentranslate.sent}}' title='{{data.meta.gentranslate.sent}}'></span>
-    <span class='fa fa-envelope text-danger' ng-if='!row.sending && !row.sent' alt='{{data.meta.gentranslate.notsent}}' title='{{data.meta.gentranslate.notsent}}'></span>
+    <span class='fa fa-envelope-open-o' ng-if='!row.sending && !row.sent' alt='{{data.meta.gentranslate.notsent}}' title='{{data.meta.gentranslate.notsent}}'></span>
 </td>
 <td>{{row.priority|codenerix}}</td>
+<td>{{row.created|codenerix}}</td>
 <td>{{row.efrom|codenerix}}</td>
 <td>{{row.eto|codenerix}}</td>
 <td>{{row.subject|codenerix}}</td>

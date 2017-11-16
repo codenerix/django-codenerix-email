@@ -44,9 +44,10 @@ class EmailMessage(CodenerixModel):
 
     def __fields__(self, info):
         fields = []
-        fields.append(('sending', _('Send'), 100))
-        fields.append(('sent', None, 100))
+        fields.append(('sending', None, 100))
+        fields.append(('sent', _('Send'), 100))
         fields.append(('priority', _('Priority'), 100))
+        fields.append(('created', _('Created'), 100))
         fields.append(('efrom', _('From'), 100))
         fields.append(('eto', _('To'), 100))
         fields.append(('subject', _('Subject'), 100))
