@@ -40,6 +40,8 @@ class EmailMessage(CodenerixModel):
     priority = models.PositiveIntegerField(_('Priority'), blank=False, null=False, default=5)
     sending = models.BooleanField(_('Sending'), blank=False, null=False, default=False)
     sent = models.BooleanField(_('Sent'), blank=False, null=False, default=False)
+    error = models.BooleanField(_('Error'), blank=False, null=False, default=False)
+    retries = models.PositiveIntegerField(_('Retries'), blank=False, null=False, default=0)
     log = models.TextField(_('Log'), blank=True, null=True)
 
     def __fields__(self, info):
@@ -51,6 +53,7 @@ class EmailMessage(CodenerixModel):
         fields.append(('efrom', _('From'), 100))
         fields.append(('eto', _('To'), 100))
         fields.append(('subject', _('Subject'), 100))
+        fields.append(('retries', _('Retries'), 100))
         return fields
 
     def __unicode__(self):

@@ -30,40 +30,69 @@ class Command(BaseCommand, Debugger):
 
     # Show this when the user types help
     help = "Try to send all emails in the queue"
-    
+
+    def add_arguments(self, parser):
+
+        # Named (optional) arguments
+        parser.add_argument('-d',
+                            action='store_true',
+                            dest='d',
+                            default=False,
+                            help='Keep the command working forever as a daemon')
+
+        # Named (optional) arguments
+        parser.add_argument('--daemon',
+                            action='store_true',
+                            dest='daemon',
+                            default=False,
+                            help='Keep the command working forever as a daemon')
+
     def handle(self, *args, **options):
-        
+
         # Autoconfigure Debugger
         self.set_name("CODENERIX-EMAIL")
         self.set_debug()
-        
-        # Get a lock system???
-        
+
+        # Get user configuration
+        daemon = bool(options['daemon'] or options['d'])
+        retries = getattr(settings, 'CLIENT_EMAIL_RETRIES', 10)
+        retries_wait = getattr(settings, 'CLIENT_EMAIL_RETRIES_WAIT', 4500)
+
         # Get a bunch of emails in the queue
         connection = None
-        emails = EmailMessage.objects.filter(sent=False, sending=False).order_by('priority', 'created')[0:getattr(settings, 'CLIENT_EMAIL_BUCKETS', 1000)]
-        # While we have emails
-        while emails:
-            
-            list_emails = [x.pk for x in emails]
-            # Set sending
-            EmailMessage.objects.filter(pk__in=list_emails).update(sending=True)
-            
-            # For each email
-            for email in emails:
-                
-                # Check if we have connection
-                if not connection:
-                    connection = email.connect()
-                
-                # Send the email
-                email.send(connection)
-            
-            # Mark as done
-            if getattr(settings, 'CLIENT_EMAIL_HISTORY', True):
-                EmailMessage.objects.filter(pk__in=list_emails).update(sent=True, sending=False)
-            else:
-                EmailMessage.objects.filter(pk__in=list_emails).delete()
-            
-            # Once done, get more to send
+
+        # If daemon mode is requested
+        while daemon:
+
+            # Get a bucket of emails
             emails = EmailMessage.objects.filter(sent=False, sending=False).order_by('priority', 'created')[0:getattr(settings, 'CLIENT_EMAIL_BUCKETS', 1000)]
+
+            # Check if there are emails to process
+            if emails:
+
+                # Convert to list
+                list_emails = [x.pk for x in emails]
+
+                # Set sending
+                EmailMessage.objects.filter(pk__in=list_emails).update(sending=True)
+
+                # For each email
+                for email in emails:
+
+                    # Check if we have connection
+                    if not connection:
+                        connection = email.connect()
+
+                    # Send the email
+                    email.send(connection)
+
+                # Mark as done
+                if getattr(settings, 'CLIENT_EMAIL_HISTORY', True):
+                    EmailMessage.objects.filter(pk__in=list_emails).update(sent=True, sending=False)
+                else:
+                    EmailMessage.objects.filter(pk__in=list_emails).delete()
+
+            else:
+
+                # Sleep for a while
+                time.sleep(10)

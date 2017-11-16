@@ -79,6 +79,7 @@ class EmailTemplateDelete(GenDelete):
 class EmailMessageList(GenList):
     model = EmailMessage
     show_details = True
+    default_ordering = '-created'
     static_partial_row = "codenerix_email/partials/emailmessages_rows.html"
     gentranslate = {'sending': _("Sending"), 'sent': _("Sent"), 'notsent': _("Not sent!")}
     extra_context = {
