@@ -22,9 +22,9 @@ from django.utils.translation import ugettext as _
 from django.conf import settings
 
 from codenerix.multiforms import MultiForm
-from codenerix.views import GenList, GenCreate, GenCreateModal, GenUpdate, GenUpdateModal, GenDelete
-from codenerix_email.models import EmailTemplate, MODELS
-from codenerix_email.forms import EmailTemplateForm
+from codenerix.views import GenList, GenCreate, GenCreateModal, GenUpdate, GenUpdateModal, GenDelete, GenDetail
+from codenerix_email.models import EmailTemplate, EmailMessage, MODELS
+from codenerix_email.forms import EmailTemplateForm, EmailMessageForm
 
 formsfull = {}
 
@@ -72,3 +72,43 @@ class EmailTemplateUpdateModal(GenUpdateModal, EmailTemplateUpdate):
 
 class EmailTemplateDelete(GenDelete):
     model = EmailTemplate
+
+
+# ############################################
+# EmailMessage
+class EmailMessageList(GenList):
+    model = EmailMessage
+    show_details = True
+    extra_context = {
+        'menu': ['EmailMessage', 'people'],
+        'bread': [_('EmailMessage'), _('People')]
+    }
+
+
+class EmailMessageCreate(GenCreate):
+    model = EmailMessage
+    form_class = EmailMessageForm
+
+
+class EmailMessageCreateModal(GenCreateModal, EmailMessageCreate):
+    pass
+
+
+class EmailMessageDetails(GenDetail):
+    model = EmailMessage
+    groups = EmailMessageForm.__groups_details__()
+    show_details = True
+
+
+class EmailMessageUpdate(GenUpdate):
+    model = EmailMessage
+    form_class = EmailMessageForm
+    show_details = True
+
+
+class EmailMessageUpdateModal(GenUpdateModal, EmailMessageUpdate):
+    pass
+
+
+class EmailMessageDelete(GenDelete):
+    model = EmailMessage

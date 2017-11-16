@@ -41,7 +41,7 @@ class EmailMessage(CodenerixModel):
     sending = models.BooleanField(_('Sending'), blank=False, null=False, default=False)
     sent = models.BooleanField(_('Sent'), blank=False, null=False, default=False)
     log = models.TextField(_('Log'), blank=True, null=True)
-    
+
     def __fields__(self, info):
         fields = []
         fields.append(('sending', _('Sending'), 100))
@@ -50,12 +50,15 @@ class EmailMessage(CodenerixModel):
         fields.append(('eto', _('To'), 100))
         fields.append(('subject', _('Subject'), 100))
         return fields
-    
+
+    def __unicode__(self):
+        return "{} ({})".format(self.eto, self.pk)
+
     def connect(self, legacy=False):
         '''
         This class will return a connection instance, you can disconnect it with connection.close()
         '''
-        
+
         if not legacy:
             host = settings.CLIENT_EMAIL_HOST
             port = settings.CLIENT_EMAIL_PORT
@@ -68,16 +71,16 @@ class EmailMessage(CodenerixModel):
             username = settings.EMAIL_USERNAME
             password = settings.EMAIL_PASSWORD
             use_tls = settings.EMAIL_USE_TLS
-        
+
         # Get connection
         return get_connection(host=host, port=port, username=username, password=password, use_tls=use_tls)
-    
+
     def send(self, connection=None, legacy=False, silent=True):
         # Get connection if not connected yet
         if connection is None:
             # Connect
             connection = self.connect(legacy)
-        
+
         if self.eto:
             # Manually open the connection
             try:
@@ -96,7 +99,7 @@ class EmailMessage(CodenerixModel):
                 for at in self.attachments.all():
                     with open(at.path) as f:
                         email.attach(at.filename, f.read(), at.mime)
-                
+
                 # send list emails
                 retries = 1
                 for t in range(0, retries + 1):
@@ -132,7 +135,7 @@ class EmailAttachment(CodenerixModel):
     filename = models.CharField(_('Filename'), max_length=256, blank=False, null=False)
     mime = models.CharField(_('Mimetype'), max_length=256, blank=False, null=False)
     path = models.FileField(_('Path'), blank=False, null=False)
-    
+
     def __fields__(self, info):
         fields = []
         fields.append(('email', _('Email'), 100))
@@ -145,20 +148,20 @@ class EmailAttachment(CodenerixModel):
 class EmailTemplate(CodenerixModel):
     cid = models.CharField(_('CID'), unique=True, max_length=30, blank=False, null=False)
     efrom = models.TextField(_('From'), blank=True, null=False)
-    
+
     def __fields__(self, info):
         fields = []
         fields.append(('pk', _('PK'), 100))
         fields.append(('cid', _('CID'), 100))
         fields.append(('efrom', _('From'), 100))
         return fields
-    
+
     def __str__(self):
         return "{}:{}".format(self.cid, self.pk)
-    
+
     def __unicode__(self):
         return self.__str__()
-    
+
     @staticmethod
     def get(cid=None, context={}, pk=None, lang=None):
         '''
@@ -172,12 +175,12 @@ class EmailTemplate(CodenerixModel):
             template = EmailTemplate.objects.filter(cid=cid).first()
         else:
             template = EmailTemplate.objects.filter(pk=pk).first()
-        
+
         if template:
             return template.get_email(context, lang)
         else:
             return None
-    
+
     def get_email(self, context, lang=None):
         if lang is None:
             lang = settings.LANGUAGES_DATABASES[0].lower()
@@ -187,7 +190,7 @@ class EmailTemplate(CodenerixModel):
         e.body = Template(getattr(self, lang).body).render(Context(context))
         e.efrom = Template(self.efrom).render(Context(context))
         return e
-    
+
     def clean(self):
         if self.cid:
             self.cid = self.cid.upper()
