@@ -80,7 +80,7 @@ class EmailMessageList(GenList):
     model = EmailMessage
     show_details = True
     static_partial_row = "codenerix_email/partials/emailmessages_rows.html"
-    gentranslate = {'sending': _("Sending"), 'sent': _("Sent"), 'notsent': _("Not sent!")}
+    gentranslate = {'sending': __("Sending"), 'sent': __("Sent"), 'notsent': _("Not sent!")}
     extra_context = {
         'menu': ['EmailMessage', 'people'],
         'bread': [_('EmailMessage'), _('People')]
