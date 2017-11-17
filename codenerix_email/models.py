@@ -22,6 +22,7 @@ import re
 import ssl
 import smtplib
 
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.template import Context, Template
@@ -29,10 +30,11 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 
 from codenerix.models import CodenerixModel
+from codenerix.lib.debugger import Debugger
 from codenerix.lib.genmail import EmailMessage as EM, get_connection
 
 
-class EmailMessage(CodenerixModel):
+class EmailMessage(CodenerixModel, Debugger):
     efrom = models.EmailField(_('From'), blank=False, null=False)
     eto = models.EmailField(_('To'), blank=False, null=False)
     subject = models.CharField(_('Subject'), max_length=256, blank=False, null=False)
@@ -42,11 +44,13 @@ class EmailMessage(CodenerixModel):
     sent = models.BooleanField(_('Sent'), blank=False, null=False, default=False)
     error = models.BooleanField(_('Error'), blank=False, null=False, default=False)
     retries = models.PositiveIntegerField(_('Retries'), blank=False, null=False, default=0)
+    next_retry = models.DateTimeField(_("Next retry"),  auto_now_add=True)
     log = models.TextField(_('Log'), blank=True, null=True)
 
     def __fields__(self, info):
         fields = []
         fields.append(('sending', None, 100))
+        fields.append(('error', None, 100))
         fields.append(('sent', _('Send'), 100))
         fields.append(('priority', _('Priority'), 100))
         fields.append(('created', _('Created'), 100))
@@ -54,6 +58,8 @@ class EmailMessage(CodenerixModel):
         fields.append(('eto', _('To'), 100))
         fields.append(('subject', _('Subject'), 100))
         fields.append(('retries', _('Retries'), 100))
+        fields.append(('next_retry', _('Next retry'), 100))
+        fields.append(('pk', _("ID"), 100))
         return fields
 
     def __unicode__(self):
@@ -80,13 +86,23 @@ class EmailMessage(CodenerixModel):
         # Get connection
         return get_connection(host=host, port=port, username=username, password=password, use_tls=use_tls)
 
-    def send(self, connection=None, legacy=False, silent=True):
+    def send(self, connection=None, legacy=False, silent=True, debug=False):
+
+        # Autoconfigure Debugger
+        if debug:
+            self.set_name("EmailMessage")
+            self.set_debug()
+
         # Get connection if not connected yet
         if connection is None:
             # Connect
+            self.warning("Not connected, connecting...")
             connection = self.connect(legacy)
 
         if self.eto:
+            if debug:
+                self.set_name("EmailMessage->{}".format(self.eto))
+
             # Manually open the connection
             try:
                 connection.open()
@@ -94,7 +110,19 @@ class EmailMessage(CodenerixModel):
                 connection = None
                 if self.log is None:
                     self.log = ''
-                self.log += u"SMTPAuthenticationError: {}\n".format(e)
+                error = u"SMTPAuthenticationError: {}\n".format(e)
+                self.warning(error)
+                self.log += error
+                # We will not retry anymore
+                self.sending = False
+                # We make lower this email's priority
+                self.priority += 1
+                # Set new retry
+                self.retries += 1
+                self.next_retry = timezone.now() + timezone.timedelta(seconds=getattr(settings, 'CLIENT_EMAIL_RETRIES_WAIT', 5400))  # retry every 1.5h
+                if self.retries >= getattr(settings, 'CLIENT_EMAIL_RETRIES', 10):  # 10 retries * 1.5h = 15h
+                    self.error = True
+                # Save all
                 self.save()
                 if not silent:
                     raise
@@ -107,7 +135,7 @@ class EmailMessage(CodenerixModel):
 
                 # send list emails
                 retries = 1
-                for t in range(0, retries + 1):
+                while retries+1:
                     try:
                         if connection.send_messages([email]):
                             # We are done
@@ -115,18 +143,31 @@ class EmailMessage(CodenerixModel):
                             self.sending = False
                             break
                     except ssl.SSLError as e:
-                        self.log += "SSLError: {}\n".format(e)
+                        error = "SSLError: {}\n".format(e)
+                        self.warning(error)
+                        self.log += error
                     except smtplib.SMTPServerDisconnected as e:
-                        self.log += "SMTPServerDisconnected: {}\n".format(e)
+                        error = "SMTPServerDisconnected: {}\n".format(e)
+                        self.warning(error)
+                        self.log += error
                     except smtplib.SMTPException as e:
-                        self.log += "SMTPException: {}\n".format(e)
+                        error = "SMTPException: {}\n".format(e)
+                        self.warning(error)
+                        self.log += error
                     finally:
+                        # One chance less
+                        retries -= 1
                         # Check if this is the last try
-                        if t == retries:
+                        if not retries:
                             # We will not retry anymore
                             self.sending = False
                             # We make lower this email's priority
                             self.priority += 1
+                            # Set new retry
+                            self.retries += 1
+                            self.next_retry = timezone.now() + timezone.timedelta(seconds=getattr(settings, 'CLIENT_EMAIL_RETRIES_WAIT', 5400))  # retry every 1.5h
+                            if self.retries >= getattr(settings, 'CLIENT_EMAIL_RETRIES', 10):  # 10 retries * 1.5h = 15h
+                                self.error = True
                         # Save the email
                         self.save()
                         # Disconnect

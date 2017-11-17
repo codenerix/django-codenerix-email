@@ -18,9 +18,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.utils import timezone
 
 from codenerix.lib.debugger import Debugger
 from codenerix_email.models import EmailMessage
@@ -47,6 +49,20 @@ class Command(BaseCommand, Debugger):
                             default=False,
                             help='Keep the command working forever as a daemon')
 
+        # Named (optional) arguments
+        parser.add_argument('-c',
+                            action='store_true',
+                            dest='c',
+                            default=False,
+                            help='Clear the sending status to all the Queue')
+
+        # Named (optional) arguments
+        parser.add_argument('--clear',
+                            action='store_true',
+                            dest='clear',
+                            default=False,
+                            help='Clear the sending status to all the Queue')
+
     def handle(self, *args, **options):
 
         # Autoconfigure Debugger
@@ -55,17 +71,26 @@ class Command(BaseCommand, Debugger):
 
         # Get user configuration
         daemon = bool(options['daemon'] or options['d'])
-        retries = getattr(settings, 'CLIENT_EMAIL_RETRIES', 10)
-        retries_wait = getattr(settings, 'CLIENT_EMAIL_RETRIES_WAIT', 4500)
+        clear = bool(options['clear'] or options['c'])
+        BUCKET_SIZE = getattr(settings, 'CLIENT_EMAIL_BUCKETS', 10)
+        if daemon:
+            self.debug("Starting command in DAEMON mode with a queue of {} emails".format(BUCKET_SIZE), color='cyan')
+        else:
+            self.debug("Starting a queue of {} emails".format(BUCKET_SIZE), color='blue')
+
+        # In if requested set sending status for all the list to False
+        if clear:
+            EmailMessage.objects.filter(sending=True).update(sending=False)
 
         # Get a bunch of emails in the queue
         connection = None
 
         # If daemon mode is requested
-        while daemon:
+        first = True
+        while first or daemon:
 
             # Get a bucket of emails
-            emails = EmailMessage.objects.filter(sent=False, sending=False).order_by('priority', 'created')[0:getattr(settings, 'CLIENT_EMAIL_BUCKETS', 1000)]
+            emails = EmailMessage.objects.filter(sent=False, sending=False, error=False, next_retry__lte=timezone.now()).order_by('priority', 'next_retry')[0:BUCKET_SIZE+1]
 
             # Check if there are emails to process
             if emails:
@@ -73,26 +98,49 @@ class Command(BaseCommand, Debugger):
                 # Convert to list
                 list_emails = [x.pk for x in emails]
 
-                # Set sending
+                # Set sending status for all the list
                 EmailMessage.objects.filter(pk__in=list_emails).update(sending=True)
 
                 # For each email
                 for email in emails:
+                    self.debug("Sending to {}".format(email.eto), color='white', tail=False)
 
                     # Check if we have connection
                     if not connection:
+                        self.debug(" - Connecting", color='yellow', head=False, tail=False)
                         connection = email.connect()
 
                     # Send the email
-                    email.send(connection)
+                    try:
+                        email.send(connection, debug=False)
+                    except Exception as e:
+                        email.sending = False
+                        error = "Exception: {}\n".format(e)
+                        email.log += error
+                        email.save()
+                        self.error(error)
+                    if email.sent:
+                        self.debug(" -> SENT", color='green', head=False)
+                    else:
+                        self.debug(" -> ERROR", color='red', head=False, tail=False)
+                        self.debug(" ({} retries left)".format(getattr(settings, 'CLIENT_EMAIL_RETRIES', 10) - email.retries), color='cyan', head=False)
 
-                # Mark as done
-                if getattr(settings, 'CLIENT_EMAIL_HISTORY', True):
-                    EmailMessage.objects.filter(pk__in=list_emails).update(sent=True, sending=False)
-                else:
-                    EmailMessage.objects.filter(pk__in=list_emails).delete()
+                # Delete all that have been sent
+                if not getattr(settings, 'CLIENT_EMAIL_HISTORY', True):
+                    EmailMessage.objects.filter(pk__in=list_emails, sent=True).delete()
 
-            else:
+            elif daemon:
 
                 # Sleep for a while
-                time.sleep(10)
+                try:
+                    time.sleep(10)
+                except KeyboardInterrupt:
+                    self.debug("Exited by user request!", color='green')
+                    break
+
+            else:
+                # No emails to send
+                self.debug("No emails to be sent at this moment in the queue!", color='green')
+
+            # This was the first time
+            first = False

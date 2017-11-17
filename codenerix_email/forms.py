@@ -53,11 +53,13 @@ class EmailMessageForm(GenModelForm):
 
     def __groups__(self):
         return [(_(u'Details'), 12,
-            ['efrom', 3],
-            ['eto', 3],
+            ['efrom', 2],
+            ['eto', 2],
             ['subject', 4],
             ['priority', 1],
             ['sent', 1],
+            ['error', 1],
+            ['retries', 1],
             ['body', 12],
         )
         ]
@@ -71,6 +73,8 @@ class EmailMessageForm(GenModelForm):
             ['priority', 3],
             ['sending', 3],
             ['sent', 3],
+            ['error', 3],
+            ['retries', 3],
             ['log', 3],
         ),(_(u'Body'), 6,
             ['body', 3],

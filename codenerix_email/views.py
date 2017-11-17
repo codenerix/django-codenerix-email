@@ -79,9 +79,9 @@ class EmailTemplateDelete(GenDelete):
 class EmailMessageList(GenList):
     model = EmailMessage
     show_details = True
-    default_ordering = '-created'
+    default_ordering = ['sent', 'priority', 'next_retry']
     static_partial_row = "codenerix_email/partials/emailmessages_rows.html"
-    gentranslate = {'sending': _("Sending"), 'sent': _("Sent"), 'notsent': _("Not sent!")}
+    gentranslate = {'sending': _("Sending"), 'sent': _("Sent"), 'notsent': _("Not sent!"), 'waiting': _("Waiting")}
     extra_context = {
         'menu': ['EmailMessage', 'people'],
         'bread': [_('EmailMessage'), _('People')]
