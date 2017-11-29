@@ -32,6 +32,7 @@ from django.conf import settings
 from codenerix.models import CodenerixModel
 from codenerix.lib.debugger import Debugger
 from codenerix.lib.genmail import EmailMessage as EM, get_connection
+from codenerix.fields import WysiwygAngularField
 
 
 class EmailMessage(CodenerixModel, Debugger):
@@ -249,7 +250,7 @@ class GenText(CodenerixModel):  # META: Abstract class
         abstract = True
 
     subject = models.TextField(_('Subject'), blank=True, null=False)
-    body = models.TextField(_('Body'), blank=True, null=False)
+    body = WysiwygAngularField(_('Body'), blank=True, null=False)
 
     def __fields__(self, info):
         fields = []

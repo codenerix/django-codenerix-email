@@ -93,17 +93,13 @@ class {model}TextForm{lang}(GenModelForm):\n
     class Meta:\n
         model={model}Text{lang}\n
         exclude = []\n
-        widgets = {{\n
-            'subject': WysiwygAngularInput(),\n
-            'body': WysiwygAngularInput(),\n
-        }}\n
     def __groups__(self):\n
         return [(_('Details'),12,"""
 
         if lang_code == settings.LANGUAGES_DATABASES[0]:
             query += """
-                ['subject', 12, None, None, None, None, None, ["ng-blur=refresh_lang_field('title', '{model}TextForm', [{languages}])"]],
-                ['body', 12, None, None, None, None, None, ["ng-blur=refresh_lang_field('url', '{model}TextForm', [{languages}])"]],
+                ['subject', 12, None, None, None, None, None, ["ng-change=refresh_lang_field('subject', '{model}TextForm', [{languages}])"]],
+                ['body', 12, None, None, None, None, None, ["ng-blur=refresh_lang_field('body', '{model}TextForm', [{languages}])"]],
             )]\n"""
         else:
             query += """
