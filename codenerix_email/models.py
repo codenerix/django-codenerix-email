@@ -178,7 +178,7 @@ class EmailMessage(CodenerixModel, Debugger):
 
 
 class EmailAttachment(CodenerixModel):
-    email = models.ForeignKey(EmailMessage, blank=False, null=False, related_name="attachments")
+    email = models.ForeignKey(EmailMessage, on_delete=models.CASCADE, blank=False, null=False, related_name="attachments")
     filename = models.CharField(_('Filename'), max_length=256, blank=False, null=False)
     mime = models.CharField(_('Mimetype'), max_length=256, blank=False, null=False)
     path = models.FileField(_('Path'), blank=False, null=False)
@@ -274,5 +274,5 @@ for info in MODELS:
     model = info[1]
     for lang_code in settings.LANGUAGES_DATABASES:
         query = "class {}Text{}(GenText):\n".format(model, lang_code)
-        query += "  {} = models.OneToOneField({}, blank=False, null=False, related_name='{}')\n".format(field, model, lang_code.lower())
+        query += "  {} = models.OneToOneField({}, on_delete=models.CASCADE, blank=False, null=False, related_name='{}')\n".format(field, model, lang_code.lower())
         exec(query)
