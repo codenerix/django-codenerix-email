@@ -93,3 +93,5 @@ ENV/
 # CODENERIX files
 /django_codenerix*.egg-info
 dist
+dist
+dist
