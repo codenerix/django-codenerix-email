@@ -84,6 +84,8 @@ class EmailMessage(CodenerixModel, Debugger):
             password = settings.EMAIL_PASSWORD
             use_tls = settings.EMAIL_USE_TLS
 
+        # Remember last connection data
+        self.__connect_info = {'host': host, 'port': port, 'use_tls': use_tls}
         # Get connection
         return get_connection(host=host, port=port, username=username, password=password, use_tls=use_tls)
 
@@ -107,11 +109,13 @@ class EmailMessage(CodenerixModel, Debugger):
             # Manually open the connection
             try:
                 connection.open()
-            except smtplib.SMTPAuthenticationError as e:
+            except (smtplib.SMTPAuthenticationError, OSError, TimeoutError) as e:
                 connection = None
                 if self.log is None:
                     self.log = ''
-                error = u"SMTPAuthenticationError: {}\n".format(e)
+                exceptiontxt = str(type(e)).split(".")[-1].split("'")[0]
+                ci = getattr(self, '__connect_info', {})
+                error = u"{}: {} [HOST={}:{} TLS={}]\n".format(exceptiontxt, e, ci.get('host','-'), ci.get('port', '-'), ci.get('use_tls', '-'))
                 self.warning(error)
                 self.log += error
                 # We will not retry anymore
