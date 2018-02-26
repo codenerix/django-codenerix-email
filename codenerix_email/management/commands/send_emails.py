@@ -116,7 +116,10 @@ class Command(BaseCommand, Debugger):
                     except Exception as e:
                         email.sending = False
                         error = "Exception: {}\n".format(e)
-                        email.log += error
+                        if email.log:
+                            email.log += error
+                        else:
+                            email.log = error
                         email.save()
                         self.error(error)
                     if email.sent:
