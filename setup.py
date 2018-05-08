@@ -18,7 +18,7 @@ setup(
     license='Apache License Version 2.0',
     description='Codenerix Email is a module that enables CODENERIX to set send emails in a general manner.',
     long_description=README,
-    url='https://github.com/centrologic/django-codenerix-email',
+    url='https://github.com/codenerix/django-codenerix-email',
     author=", ".join(codenerix_email.__authors__),
     keywords=['django', 'codenerix', 'management', 'erp', 'crm', 'send email'],
     platforms=['OS Independent'],
