@@ -45,7 +45,7 @@ class EmailMessage(CodenerixModel, Debugger):
     sent = models.BooleanField(_('Sent'), blank=False, null=False, default=False)
     error = models.BooleanField(_('Error'), blank=False, null=False, default=False)
     retries = models.PositiveIntegerField(_('Retries'), blank=False, null=False, default=0)
-    next_retry = models.DateTimeField(_("Next retry"),  auto_now_add=True)
+    next_retry = models.DateTimeField(_("Next retry"), auto_now_add=True)
     log = models.TextField(_('Log'), blank=True, null=True)
 
     def __fields__(self, info):
@@ -89,7 +89,7 @@ class EmailMessage(CodenerixModel, Debugger):
         # Get connection
         return get_connection(host=host, port=port, username=username, password=password, use_tls=use_tls)
 
-    def send(self, connection=None, legacy=False, silent=True, debug=False):
+    def send(self, connection=None, legacy=False, silent=True, debug=False, content_subtype='plain'):
 
         # Autoconfigure Debugger
         if debug:
@@ -115,7 +115,7 @@ class EmailMessage(CodenerixModel, Debugger):
                     self.log = ''
                 exceptiontxt = str(type(e)).split(".")[-1].split("'")[0]
                 ci = getattr(self, '__connect_info', {})
-                error = u"{}: {} [HOST={}:{} TLS={}]\n".format(exceptiontxt, e, ci.get('host','-'), ci.get('port', '-'), ci.get('use_tls', '-'))
+                error = u"{}: {} [HOST={}:{} TLS={}]\n".format(exceptiontxt, e, ci.get('host', '-'), ci.get('port', '-'), ci.get('use_tls', '-'))
                 self.warning(error)
                 self.log += error
                 # We will not retry anymore
@@ -134,13 +134,14 @@ class EmailMessage(CodenerixModel, Debugger):
 
             if connection:
                 email = EM(self.subject, self.body, self.efrom, [self.eto], connection=connection)
+                email.content_subtype = content_subtype
                 for at in self.attachments.all():
                     with open(at.path) as f:
                         email.attach(at.filename, f.read(), at.mime)
 
                 # send list emails
                 retries = 1
-                while retries+1:
+                while retries + 1:
                     try:
                         if connection.send_messages([email]):
                             # We are done
