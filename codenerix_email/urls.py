@@ -2,7 +2,7 @@
 #
 # django-codenerix-email
 #
-# Copyright 2017 Centrologic Computational Logistic Center S.L.
+# Codenerix GNU
 #
 # Project URL : http://www.codenerix.com
 #
@@ -18,24 +18,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf.urls import url
+from django.urls import re_path
 from codenerix_email.views import EmailTemplateList, EmailTemplateCreate, EmailTemplateCreateModal, EmailTemplateUpdate, EmailTemplateUpdateModal, EmailTemplateDelete
 from codenerix_email.views import EmailMessageList, EmailMessageCreate, EmailMessageCreateModal, EmailMessageUpdate, EmailMessageUpdateModal, EmailMessageDelete, EmailMessageDetails
 
 
 urlpatterns = [
-    url(r'^emailtemplates$', EmailTemplateList.as_view(), name='CDNX_emails_emailtemplates_list'),
-    url(r'^emailtemplates/add$', EmailTemplateCreate.as_view(), name='CDNX_emails_emailtemplates_add'),
-    url(r'^emailtemplates/addmodal$', EmailTemplateCreateModal.as_view(), name='CDNX_emails_emailtemplates_addmodal'),
-    url(r'^emailtemplates/(?P<pk>\w+)/edit$', EmailTemplateUpdate.as_view(), name='CDNX_emails_emailtemplates_edit'),
-    url(r'^emailtemplates/(?P<pk>\w+)/editmodal$', EmailTemplateUpdateModal.as_view(), name='CDNX_emails_emailtemplates_editmodal'),
-    url(r'^emailtemplates/(?P<pk>\w+)/delete$', EmailTemplateDelete.as_view(), name='CDNX_emails_emailtemplates_delete'),
+    re_path(r'^emailtemplates$', EmailTemplateList.as_view(), name='CDNX_emails_emailtemplates_list'),
+    re_path(r'^emailtemplates/add$', EmailTemplateCreate.as_view(), name='CDNX_emails_emailtemplates_add'),
+    re_path(r'^emailtemplates/addmodal$', EmailTemplateCreateModal.as_view(), name='CDNX_emails_emailtemplates_addmodal'),
+    re_path(r'^emailtemplates/(?P<pk>\w+)/edit$', EmailTemplateUpdate.as_view(), name='CDNX_emails_emailtemplates_edit'),
+    re_path(r'^emailtemplates/(?P<pk>\w+)/editmodal$', EmailTemplateUpdateModal.as_view(), name='CDNX_emails_emailtemplates_editmodal'),
+    re_path(r'^emailtemplates/(?P<pk>\w+)/delete$', EmailTemplateDelete.as_view(), name='CDNX_emails_emailtemplates_delete'),
 
-    url(r'^emailmessages$', EmailMessageList.as_view(), name='CDNX_emails_emailmessages_list'),
-    url(r'^emailmessages/add$', EmailMessageCreate.as_view(), name='CDNX_emails_emailmessages_add'),
-    url(r'^emailmessages/addmodal$', EmailMessageCreateModal.as_view(), name='CDNX_emails_emailmessages_addmodal'),
-    url(r'^emailmessages/(?P<pk>\w+)$', EmailMessageDetails.as_view(),name='CDNX_emails_emailmessages_details'),
-    url(r'^emailmessages/(?P<pk>\w+)/edit$', EmailMessageUpdate.as_view(), name='CDNX_emails_emailmessages_edit'),
-    url(r'^emailmessages/(?P<pk>\w+)/editmodal$', EmailMessageUpdateModal.as_view(), name='CDNX_emails_emailmessages_editmodal'),
-    url(r'^emailmessages/(?P<pk>\w+)/delete$', EmailMessageDelete.as_view(), name='CDNX_emails_emailmessages_delete'),
+    re_path(r'^emailmessages$', EmailMessageList.as_view(), name='CDNX_emails_emailmessages_list'),
+    re_path(r'^emailmessages/add$', EmailMessageCreate.as_view(), name='CDNX_emails_emailmessages_add'),
+    re_path(r'^emailmessages/addmodal$', EmailMessageCreateModal.as_view(), name='CDNX_emails_emailmessages_addmodal'),
+    re_path(r'^emailmessages/(?P<pk>\w+)$', EmailMessageDetails.as_view(), name='CDNX_emails_emailmessages_details'),
+    re_path(r'^emailmessages/(?P<pk>\w+)/edit$', EmailMessageUpdate.as_view(), name='CDNX_emails_emailmessages_edit'),
+    re_path(r'^emailmessages/(?P<pk>\w+)/editmodal$', EmailMessageUpdateModal.as_view(), name='CDNX_emails_emailmessages_editmodal'),
+    re_path(r'^emailmessages/(?P<pk>\w+)/delete$', EmailMessageDelete.as_view(), name='CDNX_emails_emailmessages_delete'),
 ]
