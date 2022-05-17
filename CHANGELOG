@@ -1,0 +1,5 @@
+django-codenerix-email (4.0.1) stable; urgency=medium
+
+  * Django 4.x support
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 17 May 2022 14:30:14 +0200
