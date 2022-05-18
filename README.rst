@@ -40,7 +40,3 @@ Documentation
 Coming soon... do you help us?
 
 You can get in touch with us `here <https://codenerix.com/contact/>`_.
-
-*******
-Credits
-*******
