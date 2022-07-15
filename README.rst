@@ -12,7 +12,12 @@ Codenerix Email is a module that enables `CODENERIX <https://www.codenerix.com/>
 Demo
 ****
 
-Coming soon...
+You can have a look to our demos online:
+
+* `CODENERIX Simple Agenda DEMO <http://demo.codenerix.com>`_.
+* `CODENERIX Full ERP DEMO <https://erp.codenerix.com>`_.
+
+You can find some working examples in GITHUB at `django-codenerix-examples <https://github.com/codenerix/django-codenerix-examples>`_ project.
 
 **********
 Quickstart
