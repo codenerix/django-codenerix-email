@@ -18,26 +18,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional, Tuple, List, Dict, Any
+
 from django.utils.translation import gettext as _
 from django.conf import settings
+from django.http import HttpRequest
 
 from codenerix.multiforms import MultiForm
-from codenerix.views import GenList, GenCreate, GenCreateModal, GenUpdate, GenUpdateModal, GenDelete, GenDetail
+from codenerix.views import (
+    GenList,
+    GenCreate,
+    GenCreateModal,
+    GenUpdate,
+    GenUpdateModal,
+    GenDelete,
+    GenDetail,
+)
 from codenerix_email.models import EmailTemplate, EmailMessage, MODELS
 from codenerix_email.forms import EmailTemplateForm, EmailMessageForm
 
-formsfull = {}
+formsfull: Dict[
+    str,
+    List[
+        Tuple[
+            Optional[HttpRequest],
+            Optional[str],
+            Optional[str],
+        ]
+    ],
+] = {}
 
 for info in MODELS:
     field = info[0]
     model = info[1]
     formsfull[model] = [(None, None, None)]
     for lang_code in settings.LANGUAGES_DATABASES:
-        query = "from codenerix_email.models import {}Text{}\n".format(model, lang_code)
-        query += "from codenerix_email.forms import {}TextForm{}".format(model, lang_code)
+        query = "from codenerix_email.models import {}Text{}\n".format(
+            model, lang_code
+        )
+        query += "from codenerix_email.forms import {}TextForm{}".format(
+            model, lang_code
+        )
         exec(query)
 
-        formsfull[model].append((eval("{}TextForm{}".format(model, lang_code.upper())), field, None))
+        formsfull[model].append(
+            (
+                eval("{}TextForm{}".format(model, lang_code.upper())),
+                field,
+                None,
+            )
+        )
 
 
 # ############################################
@@ -45,8 +75,8 @@ for info in MODELS:
 class EmailTemplateList(GenList):
     model = EmailTemplate
     extra_context = {
-        'menu': ['EmailTemplate', 'people'],
-        'bread': [_('EmailTemplate'), _('People')]
+        "menu": ["EmailTemplate", "people"],
+        "bread": [_("EmailTemplate"), _("People")],
     }
 
 
@@ -79,12 +109,17 @@ class EmailTemplateDelete(GenDelete):
 class EmailMessageList(GenList):
     model = EmailMessage
     show_details = True
-    default_ordering = ['sent', 'priority', 'next_retry']
+    default_ordering = ["-created"]
     static_partial_row = "codenerix_email/partials/emailmessages_rows.html"
-    gentranslate = {'sending': _("Sending"), 'sent': _("Sent"), 'notsent': _("Not sent!"), 'waiting': _("Waiting")}
+    gentranslate = {
+        "sending": _("Sending"),
+        "sent": _("Sent"),
+        "notsent": _("Not sent!"),
+        "waiting": _("Waiting"),
+    }
     extra_context = {
-        'menu': ['EmailMessage', 'people'],
-        'bread': [_('EmailMessage'), _('People')]
+        "menu": ["EmailMessage", "people"],
+        "bread": [_("EmailMessage"), _("People")],
     }
 
 
