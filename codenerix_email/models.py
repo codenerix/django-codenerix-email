@@ -30,7 +30,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 
 from codenerix.models import CodenerixModel
-from codenerix.lib.debugger import Debugger
+from codenerix_lib.debugger import Debugger
 from codenerix.lib.genmail import EmailMessage as EM, get_connection
 from codenerix.fields import WysiwygAngularField
 

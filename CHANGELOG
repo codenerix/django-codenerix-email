@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.4) stable; urgency=medium
+
+  * Debugger now uses codenerix-lib
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Mon, 8 Apr 2024 13:04:01 +0200
+
+
 django-codenerix-email (4.0.3) stable; urgency=medium
 
   * Changes default ordering for Email Messages Queue List
