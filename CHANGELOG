@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.6) stable; urgency=medium
+
+  * Follow opened emails: added tag __emsg__uuid__ for body context
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 22 May 2024 15:00:00 +0200
+
+
 django-codenerix-email (4.0.5) stable; urgency=medium
 
   * Follow opened emails

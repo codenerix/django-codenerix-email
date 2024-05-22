@@ -330,6 +330,7 @@ class EmailTemplate(CodenerixModel):
             lang = settings.LANGUAGES_DATABASES[0].lower()
 
         e = EmailMessage()
+        context["__emsg__uuid__"] = e.uuid
         e.subject = Template(getattr(self, lang).subject).render(
             Context(context)
         )
