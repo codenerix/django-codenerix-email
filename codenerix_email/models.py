@@ -21,6 +21,7 @@
 import re
 import ssl
 import smtplib
+from uuid import uuid4
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -29,13 +30,24 @@ from django.template import Context, Template
 from django.core.exceptions import ValidationError
 from django.conf import settings
 
-from codenerix.models import CodenerixModel
+from codenerix.models import CodenerixModel  # type: ignore
 from codenerix_lib.debugger import Debugger
-from codenerix.lib.genmail import EmailMessage as EM, get_connection
-from codenerix.fields import WysiwygAngularField
+from codenerix.lib.genmail import (  # type: ignore # noqa: N817
+    EmailMessage as EM,
+    get_connection,
+)
+from codenerix.fields import WysiwygAngularField  # type: ignore
 
 
 class EmailMessage(CodenerixModel, Debugger):
+    uuid = models.UUIDField(
+        _("UUID"),
+        unique=True,
+        default=uuid4,
+        editable=False,
+        null=False,
+        blank=False,
+    )
     efrom = models.EmailField(_("From"), blank=False, null=False)
     eto = models.EmailField(_("To"), blank=False, null=False)
     subject = models.CharField(
@@ -59,6 +71,9 @@ class EmailMessage(CodenerixModel, Debugger):
     )
     next_retry = models.DateTimeField(_("Next retry"), auto_now_add=True)
     log = models.TextField(_("Log"), blank=True, null=True)
+    opened = models.DateTimeField(
+        _("Opened"), null=True, blank=True, default=None
+    )
 
     def __fields__(self, info):
         fields = []
@@ -66,7 +81,9 @@ class EmailMessage(CodenerixModel, Debugger):
         fields.append(("error", None, 100))
         fields.append(("sent", _("Send"), 100))
         fields.append(("priority", _("Priority"), 100))
+        fields.append(("uuid", _("UUID"), 100))
         fields.append(("created", _("Created"), 100))
+        fields.append(("opened", _("Opened"), 100))
         fields.append(("efrom", _("From"), 100))
         fields.append(("eto", _("To"), 100))
         fields.append(("subject", _("Subject"), 100))
@@ -77,6 +94,10 @@ class EmailMessage(CodenerixModel, Debugger):
 
     def __unicode__(self):
         return "{} ({})".format(self.eto, self.pk)
+
+    def set_opened(self):
+        self.opened = timezone.now()
+        self.save()
 
     def connect(self, legacy=False):
         """

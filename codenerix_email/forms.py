@@ -32,53 +32,71 @@ class EmailTemplateForm(GenModelForm):
         exclude = []
 
     def __groups__(self):
-        return [(_(u'Details'), 12,
-            ['cid', 3],
-            ['efrom', 9],
-        )
+        return [
+            (
+                _("Details"),
+                12,
+                ["cid", 3],
+                ["efrom", 9],
+            )
         ]
 
     @staticmethod
     def __groups_details__():
-        return [(_(u'Details'), 12,
-            ['cid', 3],
-            ['efrom', 9],)
+        return [
+            (
+                _("Details"),
+                12,
+                ["cid", 3],
+                ["efrom", 9],
+            )
         ]
 
 
 class EmailMessageForm(GenModelForm):
     class Meta:
         model = EmailMessage
-        exclude = ['sending','log']
+        exclude = ["sending", "log"]
 
     def __groups__(self):
-        return [(_(u'Details'), 12,
-            ['efrom', 2],
-            ['eto', 2],
-            ['subject', 4],
-            ['priority', 1],
-            ['sent', 1],
-            ['error', 1],
-            ['retries', 1],
-            ['body', 12],
-        )
+        return [
+            (
+                _("Details"),
+                12,
+                ["efrom", 2],
+                ["eto", 2],
+                ["subject", 4],
+                ["priority", 1],
+                ["sent", 1],
+                ["error", 1],
+                ["retries", 1],
+                ["body", 12],
+            )
         ]
 
     @staticmethod
     def __groups_details__():
-        return [(_(u'Details'), 6,
-            ['efrom', 3],
-            ['eto', 3],
-            ['subject', 3],
-            ['priority', 3],
-            ['sending', 3],
-            ['sent', 3],
-            ['error', 3],
-            ['retries', 3],
-            ['log', 3],
-        ),(_(u'Body'), 6,
-            ['body', 3],
-        )
+        return [
+            (
+                _("Details"),
+                6,
+                ["uuid", 3],
+                ["efrom", 3],
+                ["eto", 3],
+                ["subject", 3],
+                ["priority", 3],
+                ["sending", 3],
+                ["sent", 3],
+                ["error", 3],
+                ["retries", 3],
+                ["opened", 3],
+                ["log", 3],
+            ),
+            (
+                _("Body"),
+                6,
+                ["body", 3],
+            ),
         ]
 
 
@@ -86,7 +104,9 @@ for info in MODELS:
     field = info[0]
     model = info[1]
     for lang_code in settings.LANGUAGES_DATABASES:
-        query = "from codenerix_email.models import {}Text{}\n".format(model, lang_code)
+        query = "from codenerix_email.models import {}Text{}\n".format(
+            model, lang_code
+        )
         exec(query)
         query = """
 class {model}TextForm{lang}(GenModelForm):\n
@@ -106,4 +126,12 @@ class {model}TextForm{lang}(GenModelForm):\n
                 ['subject', 12],
                 ['body', 12],
                 )]\n"""
-        exec(query.format(model=model, lang=lang_code, languages="'{}'".format("','".join(settings.LANGUAGES_DATABASES))))
+        exec(
+            query.format(
+                model=model,
+                lang=lang_code,
+                languages="'{}'".format(
+                    "','".join(settings.LANGUAGES_DATABASES)
+                ),
+            )
+        )

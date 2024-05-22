@@ -22,7 +22,7 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
-from codenerix.lib.debugger import Debugger
+from codenerix_lib.debugger import Debugger
 from codenerix_email.models import EmailMessage
 from codenerix_email import __version__
 
@@ -31,26 +31,28 @@ class Command(BaseCommand, Debugger):
 
     # Show this when the user types help
     help = "Test"
-    
+
     def handle(self, *args, **options):
-        
+
         # Autoconfigure Debugger
         self.set_name("CODENERIX-EMAIL")
         self.set_debug()
 
-        message = '''Hello,
+        message = """Hello,
 
 this email has been sent using Django Codenerix Email.
 
 Best regards, Codenerix Team
 
 --
-Django Codenerix Email v{}'''.format(__version__)
+Django Codenerix Email v{}""".format(
+            __version__
+        )
 
         for name, email in settings.ADMINS:
             email_message = EmailMessage()
             email_message.efrom = settings.DEFAULT_FROM_EMAIL
             email_message.eto = email
-            email_message.subject = '[Codenerix Email] Test'
+            email_message.subject = "[Codenerix Email] Test"
             email_message.body = message
             email_message.send(legacy=False, silent=False)

@@ -18,14 +18,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Tuple, List, Dict, Any
+import base64
 
+from typing import Optional, Tuple, List, Dict
+from django.http import HttpResponse
+from django.views.generic import View
+
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.conf import settings
-from django.http import HttpRequest
+from django.http import HttpRequest, Http404
 
-from codenerix.multiforms import MultiForm
-from codenerix.views import (
+from codenerix.multiforms import MultiForm  # type: ignore
+from codenerix.views import (  # type: ignore
     GenList,
     GenCreate,
     GenCreateModal,
@@ -68,6 +73,38 @@ for info in MODELS:
                 None,
             )
         )
+
+
+# ############################################
+# EmailFollow
+class EmailFollow(View):
+    def get(self, request, *args, **kwargs):
+
+        # Get uuid from email
+        uid = kwargs.get("uuid_ext", None)
+
+        if uid:
+
+            # Get email message or return 404
+            email_message = get_object_or_404(EmailMessage, uuid=uid)
+
+            # Set email message as opened
+            if not email_message.opened:
+                email_message.set_opened()
+            email_message.set_opened()
+
+            # Return an image of 1x1 pixel
+            return HttpResponse(
+                base64.b64decode(
+                    "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+                ),
+                content_type="image/gif",
+            )
+
+        else:
+
+            # Return 404
+            raise Http404
 
 
 # ############################################
