@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.5) stable; urgency=medium
+
+  * Follow opened emails
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 22 May 2024 14:44:22 +0200
+
+
 django-codenerix-email (4.0.4) stable; urgency=medium
 
   * Debugger now uses codenerix-lib
