@@ -89,8 +89,6 @@ class EmailFollow(View):
             email_message = get_object_or_404(EmailMessage, uuid=uid)
 
             # Set email message as opened
-            if not email_message.opened:
-                email_message.set_opened()
             email_message.set_opened()
 
             # Return an image of 1x1 pixel

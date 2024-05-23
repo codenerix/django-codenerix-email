@@ -96,8 +96,9 @@ class EmailMessage(CodenerixModel, Debugger):
         return "{} ({})".format(self.eto, self.pk)
 
     def set_opened(self):
-        self.opened = timezone.now()
-        self.save()
+        if not self.opened:
+            self.opened = timezone.now()
+            self.save()
 
     def connect(self, legacy=False):
         """
