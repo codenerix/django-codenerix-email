@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.8) stable; urgency=medium
+
+  * Breadcrumb ford emails
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 29 May 2024 07:45:00 +0200
+
+
 django-codenerix-email (4.0.7) stable; urgency=medium
 
   * Follow opened emails: register opened only the first time

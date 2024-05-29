@@ -110,8 +110,8 @@ class EmailFollow(View):
 class EmailTemplateList(GenList):
     model = EmailTemplate
     extra_context = {
-        "menu": ["EmailTemplate", "people"],
-        "bread": [_("EmailTemplate"), _("People")],
+        "menu": ["codenerix_email", "emailtemplate"],
+        "bread": [_("Emails"), _("Email Template")],
     }
 
 
@@ -153,8 +153,8 @@ class EmailMessageList(GenList):
         "waiting": _("Waiting"),
     }
     extra_context = {
-        "menu": ["EmailMessage", "people"],
-        "bread": [_("EmailMessage"), _("People")],
+        "menu": ["codenerix_email", "emailmessages"],
+        "bread": [_("Emails"), _("Email Messages")],
     }
 
 
