@@ -1,3 +1,18 @@
+django-codenerix-email (4.0.10) stable; urgency=medium
+
+  * Improved the way the list of EmailMessages is shown
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Sun, 02 Jun 2024 21:33:00 +0200
+
+
+django-codenerix-email (4.0.9) stable; urgency=medium
+
+  * Breadcrumb ford emails
+  * Template variable context renamed from '__emsg__uuid__' to 'CDNX_EMAIL_emsg_uuid'
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Sun, 02 Jun 2024 21:05:00 +0200
+
+
 django-codenerix-email (4.0.8) stable; urgency=medium
 
   * Breadcrumb ford emails

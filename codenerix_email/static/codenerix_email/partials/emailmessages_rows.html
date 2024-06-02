@@ -6,11 +6,13 @@
 </td>
 <td>{{row.priority|codenerix}}</td>
 <td>{{row.uuid|codenerix}}</td>
-<td>{{row.created|codenerix}}</td>
-<td>{{row.opened|codenerix}}</td>
+<td class="text-nowrap">{{row.created|codenerix}}</td>
+<td>
+    <span title="{{row.opened}}" codenerix-html-compile="row.opened|codenerix:'bool'"><span>
+</td>
 <td>{{row.efrom|codenerix}}</td>
 <td>{{row.eto|codenerix}}</td>
 <td>{{row.subject|codenerix}}</td>
 <td>{{row.retries|codenerix}}</td>
-<td>{{row.next_retry|codenerix}}</td>
+<td class="text-nowrap">{{row.next_retry|codenerix}}</td>
 <td>{{row.pk|codenerix}}</td>

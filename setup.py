@@ -41,7 +41,7 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
     install_requires=[
-        "django-codenerix>=4.0.11",
-        "django-codenerix-extensions",
+        "django-codenerix>=4.0.87",
+        "django-codenerix-extensions>=4.0.3",
     ],
 )
