@@ -17,6 +17,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# type: ignore
 
 import re
 import ssl
@@ -29,14 +31,22 @@ from django.db import models
 from django.template import Context, Template
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.db.models import Q
 
-from codenerix.models import CodenerixModel  # type: ignore
+from codenerix.models import CodenerixModel
 from codenerix_lib.debugger import Debugger
-from codenerix.lib.genmail import (  # type: ignore # noqa: N817
+from codenerix.lib.genmail import (  # noqa: N817
     EmailMessage as EM,
     get_connection,
 )
-from codenerix.fields import WysiwygAngularField  # type: ignore
+from codenerix.fields import WysiwygAngularField
+
+CONTENT_SUBTYPE_PLAIN = "plain"
+CONTENT_SUBTYPE_HTML = "html"
+CONTENT_SUBTYPES = (
+    (CONTENT_SUBTYPE_PLAIN, _("Plain")),
+    (CONTENT_SUBTYPE_HTML, _("HTML Web")),
+)
 
 
 class EmailMessage(CodenerixModel, Debugger):
@@ -74,23 +84,77 @@ class EmailMessage(CodenerixModel, Debugger):
     opened = models.DateTimeField(
         _("Opened"), null=True, blank=True, default=None
     )
+    content_subtype = models.CharField(
+        _("Content Subtype"),
+        max_length=256,
+        choices=CONTENT_SUBTYPES,
+        blank=False,
+        null=False,
+        default=CONTENT_SUBTYPE_HTML,
+    )
 
     def __fields__(self, info):
         fields = []
-        fields.append(("sending", None, 100))
-        fields.append(("error", None, 100))
-        fields.append(("sent", _("Send"), 100))
-        fields.append(("priority", _("Priority"), 100))
-        fields.append(("uuid", _("UUID"), 100))
-        fields.append(("created", _("Created"), 100))
-        fields.append(("opened", _("Opened"), 100))
-        fields.append(("efrom", _("From"), 100))
-        fields.append(("eto", _("To"), 100))
-        fields.append(("subject", _("Subject"), 100))
-        fields.append(("retries", _("Retries"), 100))
-        fields.append(("next_retry", _("Next retry"), 100))
-        fields.append(("pk", _("ID"), 100))
+        fields.append(("sending", None))
+        fields.append(("error", None))
+        fields.append(("sent", _("Send")))
+        fields.append(("priority", _("Priority")))
+        fields.append(("updated", _("Updated")))
+        fields.append(("opened", _("Opened")))
+        fields.append(("efrom", _("From")))
+        fields.append(("eto", _("To")))
+        fields.append(("subject", _("Subject")))
+        fields.append(("retries", _("Retries")))
+        fields.append(("next_retry", _("Next retry")))
+        fields.append(("pk", _("ID")))
+        fields.append(("content_subtype", _("Content Subtype")))
+        fields.append(("uuid", _("UUID")))
         return fields
+
+    def __searchQ__(self, info, search):  # noqa: N802
+        answer = super().__searchQ__(info, search)
+        answer["uuid"] = Q(uuid__icontains=search)
+        answer["priority"] = Q(priority=search)
+        answer["efrom"] = Q(efrom__icontains=search)
+        answer["eto"] = Q(eto__icontains=search)
+        answer["retries"] = Q(retries=search)
+        answer["pk"] = Q(pk=search)
+        return answer
+
+    def __searchF__(self, info):  # noqa: N802
+        def mailstatus(x):
+            if x == "D":
+                return Q(error=False, sent=True)
+            elif x == "P":
+                return Q(error=False, sent=False, sending=False)
+            elif x == "S":
+                return Q(error=False, sent=False, sending=True)
+            elif x == "E":
+                return Q(error=True)
+            else:
+                return Q()
+
+        mailoptions = [
+            ("D", _("Sent")),  # Sent - Done
+            ("P", _("Pending")),  # Pending - Pending
+            ("S", _("Sending")),  # Sending - Sending
+            ("E", _("Error")),  # Error - Error
+        ]
+
+        return {
+            "sent": (_("Sent"), lambda x: mailstatus(x), mailoptions),
+            "uuid": (_("UUID"), lambda x: Q(uuid__icontains=x), "input"),
+            "priority": (_("Priority"), lambda x: Q(priority=x), "input"),
+            "opened": (
+                _("Opened"),
+                lambda x: ~Q(opened__isnull=x),
+                [(True, _("Yes")), (False, _("No"))],
+            ),
+            "efrom": (_("From"), lambda x: Q(efrom__icontains=x), "input"),
+            "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
+            "retries": (_("Retries"), lambda x: Q(retries=x), "input"),
+            "pk": (_("ID"), lambda x: Q(pk=x), "input"),
+        }
 
     def __unicode__(self):
         return "{} ({})".format(self.eto, self.pk)
@@ -100,9 +164,63 @@ class EmailMessage(CodenerixModel, Debugger):
             self.opened = timezone.now()
             self.save()
 
-    def connect(self, legacy=False):
+    @classmethod
+    def process_queue(
+        cls, connection=None, legacy=False, silent=True, debug=False
+    ):
         """
-        This class will return a connection instance, you can disconnect it with connection.close()
+        This method will process all the emails in the queue
+        """
+
+        # Process queue
+        emails = cls.objects.filter(
+            sent=False, error=False, next_retry__lte=timezone.now()
+        )
+
+        # Do we have to send emails
+        if emails.count():
+
+            # Get connection if not connected yet
+            if connection is None:
+
+                # Connect
+                connection = cls.internal_connect(legacy)
+
+            # Configure them as sending
+            emails.update(sending=True)
+
+            # Send them
+            for email in emails.order_by("priority"):
+                try:
+                    email.send(
+                        connection=connection,
+                        legacy=legacy,
+                        silent=silent,
+                        debug=debug,
+                    )
+                except Exception as e:
+
+                    # Los the error into this email
+                    if email.log is None:
+                        email.log = ""
+                    email.log += f"Error: {e}\n"
+                    email.sending = False
+                    email.save()
+                    email.warning(f"Error at EmailMessage<{{email.pk}}>: {e}")
+
+                    # Set all emails to not sending, since we are stopping now
+                    emails.update(sending=False)
+
+                    # Re-raise the exception
+                    raise
+
+                emails.update(sending=False)
+
+    @classmethod
+    def internal_connect(cls, legacy=False):
+        """
+        This class will return a connection instance, you can disconnect it
+        with connection.close()
         """
 
         if not legacy:
@@ -119,15 +237,24 @@ class EmailMessage(CodenerixModel, Debugger):
             use_tls = settings.EMAIL_USE_TLS
 
         # Remember last connection data
-        self.__connect_info = {"host": host, "port": port, "use_tls": use_tls}
+        conect_info = {"host": host, "port": port, "use_tls": use_tls}
         # Get connection
-        return get_connection(
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-            use_tls=use_tls,
+        return (
+            get_connection(
+                host=host,
+                port=port,
+                username=username,
+                password=password,
+                use_tls=use_tls,
+            ),
+            conect_info,
         )
+
+    def connect(self, legacy=False):
+        (connection, self.__connect_info) = EmailMessage.internal_connect(
+            legacy
+        )
+        return connection
 
     def send(
         self,
@@ -135,13 +262,23 @@ class EmailMessage(CodenerixModel, Debugger):
         legacy=False,
         silent=True,
         debug=False,
-        content_subtype="plain",
+        content_subtype=None,
     ):
 
         # Autoconfigure Debugger
         if debug:
             self.set_name("EmailMessage")
             self.set_debug()
+
+        # Warn about subtype
+        if content_subtype:
+            self.warning(
+                _(
+                    "Programming ERROR: You are using content_subtype, this "
+                    "value has been DEPRECATED and will be remove in future "
+                    "versions."
+                )
+            )
 
         # Get connection if not connected yet
         if connection is None:
@@ -155,6 +292,7 @@ class EmailMessage(CodenerixModel, Debugger):
                 self.set_name("EmailMessage->{}".format(self.eto))
 
             # Manually open the connection
+            error = None
             try:
                 connection.open()
             except (
@@ -163,8 +301,6 @@ class EmailMessage(CodenerixModel, Debugger):
                 TimeoutError,
             ) as e:
                 connection = None
-                if self.log is None:
-                    self.log = ""
                 exceptiontxt = str(type(e)).split(".")[-1].split("'")[0]
                 ci = getattr(self, "__connect_info", {})
                 error = "{}: {} [HOST={}:{} TLS={}]\n".format(
@@ -175,12 +311,14 @@ class EmailMessage(CodenerixModel, Debugger):
                     ci.get("use_tls", "-"),
                 )
                 self.warning(error)
-                self.log += error
-                # We will not retry anymore
+                if self.log is None:
+                    self.log = ""
+                self.log += f"{error}\n"
+                # We will not retry anymore (for now)
                 self.sending = False
                 # We make lower this email's priority
                 self.priority += 1
-                # Set new retry
+                # Set we just made a new retry
                 self.retries += 1
                 self.next_retry = timezone.now() + timezone.timedelta(
                     seconds=getattr(
@@ -204,7 +342,7 @@ class EmailMessage(CodenerixModel, Debugger):
                     [self.eto],
                     connection=connection,
                 )
-                email.content_subtype = content_subtype
+                email.content_subtype = self.content_subtype
                 for at in self.attachments.all():
                     with open(at.path) as f:
                         email.attach(at.filename, f.read(), at.mime)
@@ -212,6 +350,7 @@ class EmailMessage(CodenerixModel, Debugger):
                 # send list emails
                 retries = 1
                 while retries + 1:
+                    error = None
                     try:
                         if connection.send_messages([email]):
                             # We are done
@@ -219,27 +358,33 @@ class EmailMessage(CodenerixModel, Debugger):
                             self.sending = False
                             break
                     except ssl.SSLError as e:
-                        error = "SSLError: {}\n".format(e)
+                        error = f"SSLError: {e}\n"
                         self.warning(error)
-                        self.log += error
+                        if self.log is None:
+                            self.log = ""
+                        self.log += f"{error}\n"
                     except smtplib.SMTPServerDisconnected as e:
-                        error = "SMTPServerDisconnected: {}\n".format(e)
+                        error = f"SMTPServerDisconnected: {e}\n"
                         self.warning(error)
-                        self.log += error
+                        if self.log is None:
+                            self.log = ""
+                        self.log += f"{error}\n"
                     except smtplib.SMTPException as e:
-                        error = "SMTPException: {}\n".format(e)
+                        error = f"SMTPException: {e}\n"
                         self.warning(error)
-                        self.log += error
+                        if self.log is None:
+                            self.log = ""
+                        self.log += f"{error}\n"
                     finally:
                         # One chance less
                         retries -= 1
                         # Check if this is the last try
                         if not retries:
-                            # We will not retry anymore
+                            # We will not retry anymore (fow now)
                             self.sending = False
                             # We make lower this email's priority
                             self.priority += 1
-                            # Set new retry
+                            # Set we just made a new retry
                             self.retries += 1
                             self.next_retry = (
                                 timezone.now()
@@ -293,12 +438,21 @@ class EmailTemplate(CodenerixModel):
         _("CID"), unique=True, max_length=30, blank=False, null=False
     )
     efrom = models.TextField(_("From"), blank=True, null=False)
+    content_subtype = models.CharField(
+        _("Content Subtype"),
+        max_length=256,
+        choices=CONTENT_SUBTYPES,
+        blank=False,
+        null=False,
+        default=CONTENT_SUBTYPE_HTML,
+    )
 
     def __fields__(self, info):
         fields = []
         fields.append(("pk", _("PK"), 100))
         fields.append(("cid", _("CID"), 100))
         fields.append(("efrom", _("From"), 100))
+        fields.append(("content_subtype", _("Content Subtype"), 100))
         return fields
 
     def __str__(self):
@@ -313,7 +467,8 @@ class EmailTemplate(CodenerixModel):
         Usages:
             EmailTemplate.get('PACO', ctx) => EmailMessage(): le falta el eto
             > cid: PACO
-            EmailTemplate.get(pk='PACO', context=ctx) => EmailMessage(): le falta el eto
+            EmailTemplate.get(pk='PACO', context=ctx) => EmailMessage(): le
+            falta el eto
             > pk: PACO    (we don't have CID)
         """
         if cid:
@@ -337,6 +492,7 @@ class EmailTemplate(CodenerixModel):
         )
         e.body = Template(getattr(self, lang).body).render(Context(context))
         e.efrom = Template(self.efrom).render(Context(context))
+        e.content_subtype = self.content_subtype
         return e
 
     def clean(self):
@@ -345,7 +501,8 @@ class EmailTemplate(CodenerixModel):
             if len(re.findall(r"[A-Za-z0-9]+", self.cid)) != 1:
                 raise ValidationError(
                     _(
-                        "CID can contains only number and letters with no spaces"
+                        "CID can contains only number and letters with "
+                        "no spaces"
                     )
                 )
 
@@ -378,8 +535,10 @@ for info in MODELS:
     field = info[0]
     model = info[1]
     for lang_code in settings.LANGUAGES_DATABASES:
-        query = "class {}Text{}(GenText):\n".format(model, lang_code)
-        query += "  {} = models.OneToOneField({}, on_delete=models.CASCADE, blank=False, null=False, related_name='{}')\n".format(
-            field, model, lang_code.lower()
+        query = f"class {model}Text{lang_code}(GenText):\n"
+        query += (
+            f"  {field} = models.OneToOneField({model}, "
+            f"on_delete=models.CASCADE, blank=False, null=False, "
+            f"related_name='{lang_code.lower()}')\n"
         )
         exec(query)

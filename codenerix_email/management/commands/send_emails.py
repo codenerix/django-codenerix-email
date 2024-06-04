@@ -70,29 +70,58 @@ class Command(BaseCommand, Debugger):
             default=False,
             help="Clear the sending status to all the Queue",
         )
+        # Named (optional) arguments
+        parser.add_argument(
+            "--verbose",
+            action="store_true",
+            dest="verbose",
+            default=False,
+            help="Enable verbose mode",
+        )
+        # Named (optional) arguments
+        parser.add_argument(
+            "--now",
+            action="store_true",
+            dest="now",
+            default=False,
+            help="Send now, do not wait the retry time",
+        )
+        # Named (optional) arguments
+        parser.add_argument(
+            "--all",
+            action="store_true",
+            dest="all",
+            default=False,
+            help="Send all, do not do on buckets",
+        )
 
     def handle(self, *args, **options):
+
+        # Get user configuration
+        daemon = bool(options["daemon"] or options["d"])
+        clear = bool(options["clear"] or options["c"])
+        bucket_size = getattr(settings, "CLIENT_EMAIL_BUCKETS", 10)
+        verbose = bool(options.get("verbose", False))
+        sendnow = bool(options.get("now", False))
+        doall = bool(options.get("all", False))
 
         # Autoconfigure Debugger
         self.set_name("CODENERIX-EMAIL")
         self.set_debug()
 
-        # Get user configuration
-        daemon = bool(options["daemon"] or options["d"])
-        clear = bool(options["clear"] or options["c"])
-        BUCKET_SIZE = getattr(settings, "CLIENT_EMAIL_BUCKETS", 10)
-        if daemon:
-            self.debug(
-                "Starting command in DAEMON mode with a queue of {} emails".format(
-                    BUCKET_SIZE
-                ),
-                color="cyan",
-            )
-        else:
-            self.debug(
-                "Starting a queue of {} emails".format(BUCKET_SIZE),
-                color="blue",
-            )
+        # Daemon
+        if verbose:
+            if daemon:
+                self.debug(
+                    "Starting command in DAEMON mode with a "
+                    f"queue of {bucket_size} emails",
+                    color="cyan",
+                )
+            else:
+                self.debug(
+                    "Starting a queue of {} emails".format(bucket_size),
+                    color="blue",
+                )
 
         # In if requested set sending status for all the list to False
         if clear:
@@ -110,8 +139,20 @@ class Command(BaseCommand, Debugger):
                 sent=False,
                 sending=False,
                 error=False,
-                next_retry__lte=timezone.now(),
-            ).order_by("priority", "next_retry")[0 : BUCKET_SIZE + 1]
+            )
+
+            # If we do not have to send now we have to wait for the next retry
+            if not sendnow:
+                emails = emails.filter(
+                    next_retry__lte=timezone.now(),
+                )
+
+            # Order emails by priority and next retry
+            emails = emails.order_by("priority", "next_retry")
+
+            # Send in buckets if we are not doing them all
+            if not doall:
+                emails = emails[0 : bucket_size + 1]
 
             # Check if there are emails to process
             if emails:
@@ -126,20 +167,22 @@ class Command(BaseCommand, Debugger):
 
                 # For each email
                 for email in emails:
-                    self.debug(
-                        "Sending to {}".format(email.eto),
-                        color="white",
-                        tail=False,
-                    )
+                    if verbose:
+                        self.debug(
+                            "Sending to {}".format(email.eto),
+                            color="white",
+                            tail=False,
+                        )
 
                     # Check if we have connection
                     if not connection:
-                        self.debug(
-                            " - Connecting",
-                            color="yellow",
-                            head=False,
-                            tail=False,
-                        )
+                        if verbose:
+                            self.debug(
+                                " - Connecting",
+                                color="yellow",
+                                head=False,
+                                tail=False,
+                            )
                         connection = email.connect()
 
                     # Send the email
@@ -154,20 +197,26 @@ class Command(BaseCommand, Debugger):
                             email.log = error
                         email.save()
                         self.error(error)
-                    if email.sent:
-                        self.debug(" -> SENT", color="green", head=False)
-                    else:
-                        self.debug(
-                            " -> ERROR", color="red", head=False, tail=False
-                        )
-                        self.debug(
-                            " ({} retries left)".format(
-                                getattr(settings, "CLIENT_EMAIL_RETRIES", 10)
-                                - email.retries
-                            ),
-                            color="cyan",
-                            head=False,
-                        )
+                    if verbose:
+                        if email.sent:
+                            self.debug(" -> SENT", color="green", head=False)
+                        else:
+                            self.debug(
+                                " -> ERROR",
+                                color="red",
+                                head=False,
+                                tail=False,
+                            )
+                            self.debug(
+                                " ({} retries left)".format(
+                                    getattr(
+                                        settings, "CLIENT_EMAIL_RETRIES", 10
+                                    )
+                                    - email.retries
+                                ),
+                                color="cyan",
+                                head=False,
+                            )
 
                 # Delete all that have been sent
                 if not getattr(settings, "CLIENT_EMAIL_HISTORY", True):
@@ -184,7 +233,7 @@ class Command(BaseCommand, Debugger):
                     self.debug("Exited by user request!", color="green")
                     break
 
-            else:
+            elif verbose:
                 # No emails to send
                 self.debug(
                     "No emails to be sent at this moment in the queue!",

@@ -144,7 +144,8 @@ class EmailTemplateDelete(GenDelete):
 class EmailMessageList(GenList):
     model = EmailMessage
     show_details = True
-    default_ordering = ["-created"]
+    search_filter_button = True
+    default_ordering = ["-updated"]
     static_partial_row = "codenerix_email/partials/emailmessages_rows.html"
     gentranslate = {
         "sending": _("Sending"),

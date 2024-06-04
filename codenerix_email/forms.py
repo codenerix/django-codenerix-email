@@ -36,9 +36,18 @@ class EmailTemplateForm(GenModelForm):
             (
                 _("Details"),
                 12,
-                ["cid", 3],
-                ["efrom", 9],
-            )
+                (
+                    None,
+                    3,
+                    ["cid", 12],
+                    ["content_subtype", 12],
+                ),
+                (
+                    None,
+                    9,
+                    ["efrom", 9],
+                ),
+            ),
         ]
 
     @staticmethod
@@ -81,20 +90,26 @@ class EmailMessageForm(GenModelForm):
                 _("Details"),
                 6,
                 ["uuid", 3],
+                ["created", 3],
+                ["updated", 3],
                 ["efrom", 3],
                 ["eto", 3],
                 ["subject", 3],
-                ["priority", 3],
+                ["opened", 3],
+            ),
+            (
+                _("System"),
+                6,
                 ["sending", 3],
                 ["sent", 3],
                 ["error", 3],
                 ["retries", 3],
-                ["opened", 3],
+                ["priority", 3],
                 ["log", 3],
             ),
             (
                 _("Body"),
-                6,
+                12,
                 ["body", 3],
             ),
         ]
