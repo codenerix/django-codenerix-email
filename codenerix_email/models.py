@@ -237,7 +237,12 @@ class EmailMessage(CodenerixModel, Debugger):
             use_tls = settings.EMAIL_USE_TLS
 
         # Remember last connection data
-        conect_info = {"host": host, "port": port, "use_tls": use_tls}
+        connect_info = {
+            "host": host,
+            "port": port,
+            "use_tls": use_tls,
+            "legacy": legacy,
+        }
         # Get connection
         return (
             get_connection(
@@ -247,7 +252,7 @@ class EmailMessage(CodenerixModel, Debugger):
                 password=password,
                 use_tls=use_tls,
             ),
-            conect_info,
+            connect_info,
         )
 
     def connect(self, legacy=False):
@@ -365,10 +370,23 @@ class EmailMessage(CodenerixModel, Debugger):
                         self.log += f"{error}\n"
                     except smtplib.SMTPServerDisconnected as e:
                         error = f"SMTPServerDisconnected: {e}\n"
-                        self.warning(error)
                         if self.log is None:
                             self.log = ""
                         self.log += f"{error}\n"
+                        try:
+                            connection.open()
+                            error = None
+                        except (
+                            smtplib.SMTPAuthenticationError,
+                            OSError,
+                            TimeoutError,
+                        ) as e:
+                            self.warning(error)
+                            error = f"SMTPServerReconnect: {e}\n"
+                            self.warning(error)
+                            if self.log is None:
+                                self.log = ""
+                            self.log += f"{error}\n"
                     except smtplib.SMTPException as e:
                         error = f"SMTPException: {e}\n"
                         self.warning(error)

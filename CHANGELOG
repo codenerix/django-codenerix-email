@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.12) stable; urgency=medium
+
+  * Don't say about reconnections if everything goes fine
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 04 Jun 2024 21:51:00 +0200
+
+
 django-codenerix-email (4.0.11) stable; urgency=medium
 
   * Improved mailing system
