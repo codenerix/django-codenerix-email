@@ -315,7 +315,8 @@ class EmailMessage(CodenerixModel, Debugger):
                     ci.get("port", "-"),
                     ci.get("use_tls", "-"),
                 )
-                self.warning(error)
+                if not silent or debug:
+                    self.warning(error)
                 if self.log is None:
                     self.log = ""
                 self.log += f"{error}\n"
@@ -364,12 +365,15 @@ class EmailMessage(CodenerixModel, Debugger):
                             break
                     except ssl.SSLError as e:
                         error = f"SSLError: {e}\n"
-                        self.warning(error)
+                        if not silent or debug:
+                            self.warning(error)
                         if self.log is None:
                             self.log = ""
                         self.log += f"{error}\n"
                     except smtplib.SMTPServerDisconnected as e:
                         error = f"SMTPServerDisconnected: {e}\n"
+                        if not silent or debug:
+                            self.warning(error)
                         if self.log is None:
                             self.log = ""
                         self.log += f"{error}\n"
@@ -381,15 +385,16 @@ class EmailMessage(CodenerixModel, Debugger):
                             OSError,
                             TimeoutError,
                         ) as e:
-                            self.warning(error)
                             error = f"SMTPServerReconnect: {e}\n"
-                            self.warning(error)
+                            if not silent or debug:
+                                self.warning(error)
                             if self.log is None:
                                 self.log = ""
                             self.log += f"{error}\n"
                     except smtplib.SMTPException as e:
                         error = f"SMTPException: {e}\n"
-                        self.warning(error)
+                        if not silent or debug:
+                            self.warning(error)
                         if self.log is None:
                             self.log = ""
                         self.log += f"{error}\n"

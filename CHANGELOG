@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.13) stable; urgency=medium
+
+  * Removed warnings on silent mode
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 04 Jun 2024 21:59:00 +0200
+
+
 django-codenerix-email (4.0.12) stable; urgency=medium
 
   * Don't say about reconnections if everything goes fine
