@@ -1,0 +1,181 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-10 08:23+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: codenerix_email/forms.py:37 codenerix_email/forms.py:57
+#: codenerix_email/forms.py:73 codenerix_email/forms.py:90
+msgid "Details"
+msgstr ""
+
+#: codenerix_email/forms.py:101
+msgid "System"
+msgstr ""
+
+#: codenerix_email/forms.py:111 codenerix_email/models.py:66
+#: codenerix_email/models.py:538 codenerix_email/models.py:543
+msgid "Body"
+msgstr ""
+
+#: codenerix_email/models.py:47
+msgid "Plain"
+msgstr ""
+
+#: codenerix_email/models.py:48
+msgid "HTML Web"
+msgstr ""
+
+#: codenerix_email/models.py:54 codenerix_email/models.py:111
+#: codenerix_email/models.py:146
+msgid "UUID"
+msgstr ""
+
+#: codenerix_email/models.py:61 codenerix_email/models.py:104
+#: codenerix_email/models.py:153 codenerix_email/models.py:463
+#: codenerix_email/models.py:477
+msgid "From"
+msgstr ""
+
+#: codenerix_email/models.py:62 codenerix_email/models.py:105
+#: codenerix_email/models.py:154
+msgid "To"
+msgstr ""
+
+#: codenerix_email/models.py:64 codenerix_email/models.py:106
+#: codenerix_email/models.py:537 codenerix_email/models.py:542
+msgid "Subject"
+msgstr ""
+
+#: codenerix_email/models.py:68 codenerix_email/models.py:101
+#: codenerix_email/models.py:147
+msgid "Priority"
+msgstr ""
+
+#: codenerix_email/models.py:71 codenerix_email/models.py:140
+#: codenerix_email/views.py:152
+msgid "Sending"
+msgstr ""
+
+#: codenerix_email/models.py:74 codenerix_email/models.py:138
+#: codenerix_email/models.py:145 codenerix_email/views.py:153
+msgid "Sent"
+msgstr ""
+
+#: codenerix_email/models.py:77 codenerix_email/models.py:141
+msgid "Error"
+msgstr ""
+
+#: codenerix_email/models.py:80 codenerix_email/models.py:107
+#: codenerix_email/models.py:155
+msgid "Retries"
+msgstr ""
+
+#: codenerix_email/models.py:82 codenerix_email/models.py:108
+msgid "Next retry"
+msgstr ""
+
+#: codenerix_email/models.py:83
+msgid "Log"
+msgstr ""
+
+#: codenerix_email/models.py:85 codenerix_email/models.py:103
+#: codenerix_email/models.py:149
+msgid "Opened"
+msgstr ""
+
+#: codenerix_email/models.py:88 codenerix_email/models.py:110
+#: codenerix_email/models.py:465 codenerix_email/models.py:478
+msgid "Content Subtype"
+msgstr ""
+
+#: codenerix_email/models.py:100
+msgid "Send"
+msgstr ""
+
+#: codenerix_email/models.py:102
+msgid "Updated"
+msgstr ""
+
+#: codenerix_email/models.py:109 codenerix_email/models.py:156
+msgid "ID"
+msgstr ""
+
+#: codenerix_email/models.py:139
+msgid "Pending"
+msgstr ""
+
+#: codenerix_email/models.py:151
+msgid "Yes"
+msgstr ""
+
+#: codenerix_email/models.py:151
+msgid "No"
+msgstr ""
+
+#: codenerix_email/models.py:282
+msgid ""
+"Programming ERROR: You are using content_subtype, this value has been "
+"DEPRECATED and will be remove in future versions."
+msgstr ""
+
+#: codenerix_email/models.py:443 codenerix_email/models.py:453
+msgid "Filename"
+msgstr ""
+
+#: codenerix_email/models.py:446 codenerix_email/models.py:454
+msgid "Mimetype"
+msgstr ""
+
+#: codenerix_email/models.py:448 codenerix_email/models.py:455
+msgid "Path"
+msgstr ""
+
+#: codenerix_email/models.py:452
+msgid "Email"
+msgstr ""
+
+#: codenerix_email/models.py:461 codenerix_email/models.py:476
+msgid "CID"
+msgstr ""
+
+#: codenerix_email/models.py:475
+msgid "PK"
+msgstr ""
+
+#: codenerix_email/models.py:527
+msgid "CID can contains only number and letters with no spaces"
+msgstr ""
+
+#: codenerix_email/views.py:114 codenerix_email/views.py:159
+msgid "Emails"
+msgstr ""
+
+#: codenerix_email/views.py:114
+msgid "Email Template"
+msgstr ""
+
+#: codenerix_email/views.py:154
+msgid "Not sent!"
+msgstr ""
+
+#: codenerix_email/views.py:155
+msgid "Waiting"
+msgstr ""
+
+#: codenerix_email/views.py:159
+msgid "Email Messages"
+msgstr ""
