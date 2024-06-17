@@ -99,9 +99,10 @@ class EmailMessage(CodenerixModel, Debugger):
         fields.append(("error", None))
         fields.append(("sent", _("Send")))
         fields.append(("priority", _("Priority")))
+        fields.append(("created", _("Created")))
         fields.append(("updated", _("Updated")))
         fields.append(("opened", _("Opened")))
-        fields.append(("efrom", _("From")))
+        # fields.append(("efrom", _("From")))
         fields.append(("eto", _("To")))
         fields.append(("subject", _("Subject")))
         fields.append(("retries", _("Retries")))
@@ -115,7 +116,7 @@ class EmailMessage(CodenerixModel, Debugger):
         answer = super().__searchQ__(info, search)
         answer["uuid"] = Q(uuid__icontains=search)
         answer["priority"] = Q(priority=search)
-        answer["efrom"] = Q(efrom__icontains=search)
+        # answer["efrom"] = Q(efrom__icontains=search)
         answer["eto"] = Q(eto__icontains=search)
         answer["retries"] = Q(retries=search)
         answer["pk"] = Q(pk=search)
@@ -150,7 +151,7 @@ class EmailMessage(CodenerixModel, Debugger):
                 lambda x: ~Q(opened__isnull=x),
                 [(True, _("Yes")), (False, _("No"))],
             ),
-            "efrom": (_("From"), lambda x: Q(efrom__icontains=x), "input"),
+            # "efrom": (_("From"), lambda x: Q(efrom__icontains=x), "input"),
             "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
             "retries": (_("Retries"), lambda x: Q(retries=x), "input"),
             "pk": (_("ID"), lambda x: Q(pk=x), "input"),

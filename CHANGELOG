@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.16) stable; urgency=medium
+
+  * Improved listing for sent emails
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Mon, 17 Jun 2024 06:22:00 +0200
+
+
 django-codenerix-email (4.0.15) stable; urgency=medium
 
   * Translations to Spanish
