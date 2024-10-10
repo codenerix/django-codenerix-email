@@ -26,4 +26,11 @@
         </button>
     </center>
 </td>
-<td>{{row.uuid|codenerix}}</td>
+<td>
+    <span codenerix-html-compile="row.uuid|codenerix:'copytoclipboard:UUID:UUID copiado al portapapales...':codenerix_inner_element">
+        <span class="fa fa-barcode"></span>
+    </span>
+</td>
+<td>
+    <span codenerix-html-compile="row.unsubscribe_url|codenerix:'link'">
+</td>

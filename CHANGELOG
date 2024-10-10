@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.17) stable; urgency=medium
+
+  * Support for unsubscribe headers
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Thu, 10 Oct 2024 14:33:00 +0200
+
+
 django-codenerix-email (4.0.16) stable; urgency=medium
 
   * Improved listing for sent emails

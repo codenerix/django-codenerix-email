@@ -92,6 +92,9 @@ class EmailMessage(CodenerixModel, Debugger):
         null=False,
         default=CONTENT_SUBTYPE_HTML,
     )
+    unsubscribe_url = models.URLField(
+        _("Unsubscribe URL"), blank=True, null=True
+    )
 
     def __fields__(self, info):
         fields = []
@@ -110,6 +113,7 @@ class EmailMessage(CodenerixModel, Debugger):
         fields.append(("pk", _("ID")))
         fields.append(("content_subtype", _("Content Subtype")))
         fields.append(("uuid", _("UUID")))
+        fields.append(("unsubscribe_url", _("Unsubscribe URL")))
         return fields
 
     def __searchQ__(self, info, search):  # noqa: N802
@@ -120,6 +124,7 @@ class EmailMessage(CodenerixModel, Debugger):
         answer["eto"] = Q(eto__icontains=search)
         answer["retries"] = Q(retries=search)
         answer["pk"] = Q(pk=search)
+        answer["unsubscribe_url"] = Q(unsubscribe_url__icontains=search)
         return answer
 
     def __searchF__(self, info):  # noqa: N802
@@ -155,6 +160,11 @@ class EmailMessage(CodenerixModel, Debugger):
             "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
             "retries": (_("Retries"), lambda x: Q(retries=x), "input"),
             "pk": (_("ID"), lambda x: Q(pk=x), "input"),
+            "unsubscribe_url": (
+                _("Unsubscribe URL"),
+                lambda x: Q(unsubscribe_url__icontains=x),
+                "input",
+            ),
         }
 
     def __unicode__(self):
@@ -342,13 +352,25 @@ class EmailMessage(CodenerixModel, Debugger):
                     raise
 
             if connection:
+
+                # Prepare headers
+                headers = {}
+
+                # If unsubscribe_url is set, add List-Unsubscribe header
+                if self.unsubscribe_url:
+                    headers["List-Unsubscribe"] = f"<{self.unsubscribe_url}>"
+                    headers[
+                        "List-Unsubscribe-Post"
+                    ] = "List-Unsubscribe=One-Click"
+
                 email = EM(
-                    self.subject,
-                    self.body,
-                    self.efrom,
-                    [self.eto],
+                    subject=self.subject,
+                    body=self.body,
+                    from_email=self.efrom,
+                    to=[self.eto],
                     connection=connection,
                 )
+                email.headers = headers
                 email.content_subtype = self.content_subtype
                 for at in self.attachments.all():
                     with open(at.path) as f:
