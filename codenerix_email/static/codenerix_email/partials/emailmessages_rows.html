@@ -13,7 +13,7 @@
     <span title="{{row.opened}}" codenerix-html-compile="row.opened|codenerix:'bool'"><span>
 </td>
 <td>{{row.eto|codenerix}}</td>
-<td>{{row.subject|codenerix}}</td>
+<td><nobr>{{row.subject|codenerix}}</nobr></td>
 <td><center>{{row.retries|codenerix}}</center></td>
 <td class="text-nowrap">{{row.next_retry|codenerix}}</td>
 <td><center>{{row.pk|codenerix}}</center></td>
@@ -26,11 +26,11 @@
         </button>
     </center>
 </td>
-<td>
+<td ng-click="$event.stopPropagation();" align="center">
     <span codenerix-html-compile="row.uuid|codenerix:'copytoclipboard:UUID:UUID copiado al portapapales...':codenerix_inner_element">
         <span class="fa fa-barcode"></span>
     </span>
 </td>
-<td>
-    <span codenerix-html-compile="row.unsubscribe_url|codenerix:'link'">
+<td ng-click="$event.stopPropagation();" align="center">
+    <span codenerix-html-compile="row.unsubscribe_url|codenerix:'link:blank:onlyicon'">
 </td>
