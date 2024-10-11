@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.20) stable; urgency=medium
+
+  * Repaired headers for EmailMessages
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Thu, 11 Oct 2024 12:57:00 +0200
+
+
 django-codenerix-email (4.0.19) stable; urgency=medium
 
   * Improved listing of messages

@@ -175,6 +175,17 @@ class EmailMessage(CodenerixModel, Debugger):
             self.opened = timezone.now()
             self.save()
 
+    @property
+    def headers(self):
+        headers = {}
+        if self.unsubscribe_url:
+            headers["List-Unsubscribe"] = f"<{self.unsubscribe_url}>"
+            headers[
+                "List-Unsubscribe-Post"
+            ] = "List-Unsubscribe=One-Click"
+        return headers
+
+
     @classmethod
     def process_queue(
         cls, connection=None, legacy=False, silent=True, debug=False
@@ -353,24 +364,14 @@ class EmailMessage(CodenerixModel, Debugger):
 
             if connection:
 
-                # Prepare headers
-                headers = {}
-
-                # If unsubscribe_url is set, add List-Unsubscribe header
-                if self.unsubscribe_url:
-                    headers["List-Unsubscribe"] = f"<{self.unsubscribe_url}>"
-                    headers[
-                        "List-Unsubscribe-Post"
-                    ] = "List-Unsubscribe=One-Click"
-
                 email = EM(
                     subject=self.subject,
                     body=self.body,
                     from_email=self.efrom,
                     to=[self.eto],
                     connection=connection,
+                    headers = self.headers
                 )
-                email.headers = headers
                 email.content_subtype = self.content_subtype
                 for at in self.attachments.all():
                     with open(at.path) as f:
