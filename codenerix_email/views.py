@@ -146,7 +146,7 @@ class EmailMessageList(GenList):
     show_details = True
     search_filter_button = True
     datetime_filter = "updated"
-    default_ordering = ["-updated"]
+    default_ordering = ["-created"]
     static_partial_row = "codenerix_email/partials/emailmessages_rows.html"
     gentranslate = {
         "sending": _("Sending"),

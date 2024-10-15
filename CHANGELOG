@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.22) stable; urgency=medium
+
+  * Not to confuse the user, the default ordering for EmailMessages is now "-created"
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Thu, 15 Oct 2024 10:56:00 +0200
+
+
 django-codenerix-email (4.0.21) stable; urgency=medium
 
   * Added support for custom headers for EmailMessages
