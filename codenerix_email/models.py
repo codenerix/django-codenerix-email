@@ -49,6 +49,12 @@ CONTENT_SUBTYPES = (
 )
 
 
+def ensure_header(headers, key, value):
+    if key not in headers:
+        headers[key] = value
+    return headers
+
+
 class EmailMessage(CodenerixModel, Debugger):
     uuid = models.UUIDField(
         _("UUID"),
@@ -95,6 +101,7 @@ class EmailMessage(CodenerixModel, Debugger):
     unsubscribe_url = models.URLField(
         _("Unsubscribe URL"), blank=True, null=True
     )
+    headers = models.JSONField(_("Headers"), blank=True, null=True)
 
     def __fields__(self, info):
         fields = []
@@ -111,9 +118,9 @@ class EmailMessage(CodenerixModel, Debugger):
         fields.append(("retries", _("Retries")))
         fields.append(("next_retry", _("Next retry")))
         fields.append(("pk", _("ID")))
-        fields.append(("content_subtype", _("Content Subtype")))
         fields.append(("uuid", _("UUID")))
-        fields.append(("unsubscribe_url", _("Unsubscribe URL")))
+        fields.append(("unsubscribe_url", _("Unsubscribe")))
+        fields.append(("content_subtype", _("Content Subtype")))
         return fields
 
     def __searchQ__(self, info, search):  # noqa: N802
@@ -160,31 +167,36 @@ class EmailMessage(CodenerixModel, Debugger):
             "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
             "retries": (_("Retries"), lambda x: Q(retries=x), "input"),
             "pk": (_("ID"), lambda x: Q(pk=x), "input"),
-            "unsubscribe_url": (
-                _("Unsubscribe URL"),
-                lambda x: Q(unsubscribe_url__icontains=x),
-                "input",
-            ),
         }
 
     def __unicode__(self):
         return "{} ({})".format(self.eto, self.pk)
+
+    def clean(self):
+        if not isinstance(self.headers, dict):
+            raise ValidationError(_("HEADERS must be a Dictionary"))
 
     def set_opened(self):
         if not self.opened:
             self.opened = timezone.now()
             self.save()
 
-    @property
-    def headers(self):
-        headers = {}
-        if self.unsubscribe_url:
-            headers["List-Unsubscribe"] = f"<{self.unsubscribe_url}>"
-            headers[
-                "List-Unsubscribe-Post"
-            ] = "List-Unsubscribe=One-Click"
-        return headers
+    def get_headers(self):
 
+        # Get headers
+        headers = self.headers or {}
+
+        # Ensure unsubscribe headers
+        if self.unsubscribe_url:
+            ensure_header(
+                headers, "List-Unsubscribe", f"<{self.unsubscribe_url}>"
+            )
+            ensure_header(
+                headers, "List-Unsubscribe-Post", "List-Unsubscribe=One-Click"
+            )
+
+        # Return headers
+        return headers
 
     @classmethod
     def process_queue(
@@ -370,7 +382,7 @@ class EmailMessage(CodenerixModel, Debugger):
                     from_email=self.efrom,
                     to=[self.eto],
                     connection=connection,
-                    headers = self.headers
+                    headers=self.get_headers(),
                 )
                 email.content_subtype = self.content_subtype
                 for at in self.attachments.all():

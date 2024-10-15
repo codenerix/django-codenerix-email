@@ -17,7 +17,13 @@
 <td><center>{{row.retries|codenerix}}</center></td>
 <td class="text-nowrap">{{row.next_retry|codenerix}}</td>
 <td><center>{{row.pk|codenerix}}</center></td>
-<td>
+<td ng-click="$event.stopPropagation();" align="center">
+    <nobr><i title="{{row.uuid}}" codenerix-html-compile="row.uuid|codenerix:'copytoclipboard:UUID:UUID copiado al portapapales...'"></i></nobr>
+</td>
+<td ng-click="$event.stopPropagation();" align="center">
+    <i codenerix-html-compile="row.unsubscribe_url|codenerix:'link:blank:onlyicon'"></i>
+</td>
+<td ng-click="$event.stopPropagation();">
     <center>
         <button class="btn" title="{{row.content_subtype|codenerix}}">
             <i ng-show="row.content_subtype=='plain'" class="fa fa-file-text-o" aria-hidden="true"></i>
@@ -25,12 +31,4 @@
             <i ng-hide="(row.content_subtype=='plain') || (row.content_subtype=='html')"class="fa fa-question-circle-o" aria-hidden="true"></i>
         </button>
     </center>
-</td>
-<td ng-click="$event.stopPropagation();" align="center">
-    <span codenerix-html-compile="row.uuid|codenerix:'copytoclipboard:UUID:UUID copiado al portapapales...':codenerix_inner_element">
-        <span class="fa fa-barcode"></span>
-    </span>
-</td>
-<td ng-click="$event.stopPropagation();" align="center">
-    <span codenerix-html-compile="row.unsubscribe_url|codenerix:'link:blank:onlyicon'">
 </td>

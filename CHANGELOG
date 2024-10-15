@@ -1,3 +1,10 @@
+django-codenerix-email (4.0.21) stable; urgency=medium
+
+  * Added support for custom headers for EmailMessages
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Thu, 15 Oct 2024 10:26:00 +0200
+
+
 django-codenerix-email (4.0.20) stable; urgency=medium
 
   * Repaired headers for EmailMessages

@@ -96,6 +96,7 @@ class EmailMessageForm(GenModelForm):
                 ["eto", 3],
                 ["subject", 3],
                 ["opened", 3],
+                ["content_subtype", 3],
             ),
             (
                 _("System"),
@@ -106,6 +107,8 @@ class EmailMessageForm(GenModelForm):
                 ["retries", 3],
                 ["priority", 3],
                 ["log", 3],
+                ["unsubscribe_url", 3],
+                ["headers", 3],
             ),
             (
                 _("Body"),
