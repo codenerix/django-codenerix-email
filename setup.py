@@ -10,7 +10,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst")) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name="django-codenerix-email",
+    name="django_codenerix_email",
     version=codenerix_email.__version__,
     packages=["codenerix_email"],
     include_package_data=True,
@@ -41,7 +41,7 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
     install_requires=[
-        "django-codenerix>=5.0.10",
-        "django-codenerix-extensions>=4.0.3",
+        "django_codenerix>=5.0.10",
+        "django_codenerix_extensions>=4.0.3",
     ],
 )
