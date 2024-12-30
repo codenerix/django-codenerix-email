@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.25) stable; urgency=medium
+
+  * Test email script corrected
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Mon, 30 Dec 2024 06:59:00 +0200
+
+
 django_codenerix_email (4.0.24) stable; urgency=medium
 
   * Updated package naming to compliant with PEP625

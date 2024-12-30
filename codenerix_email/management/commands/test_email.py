@@ -55,4 +55,5 @@ Django Codenerix Email v{}""".format(
             email_message.eto = email
             email_message.subject = "[Codenerix Email] Test"
             email_message.body = message
+            email_message.save()
             email_message.send(legacy=False, silent=False)
