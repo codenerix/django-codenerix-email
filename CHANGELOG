@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.26) stable; urgency=medium
+
+  * Reversed the list of Email Templates
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Mon, 31 Jan 2025 09:28:00 +0200
+
+
 django_codenerix_email (4.0.25) stable; urgency=medium
 
   * Test email script corrected

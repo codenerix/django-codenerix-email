@@ -109,6 +109,7 @@ class EmailFollow(View):
 # EmailTemplate
 class EmailTemplateList(GenList):
     model = EmailTemplate
+    default_ordering = ["-created"]
     extra_context = {
         "menu": ["codenerix_email", "emailtemplate"],
         "bread": [_("Emails"), _("Email Template")],
