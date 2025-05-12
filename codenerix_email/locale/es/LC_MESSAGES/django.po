@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-21 08:29+0200\n"
+"POT-Creation-Date: 2025-03-26 06:41+0100\n"
 "PO-Revision-Date: 2024-10-21 08:33+0200\n"
 "Last-Translator: abcdabcdabcdabcd  <yo@br0th3r.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,12 +66,12 @@ msgid "Priority"
 msgstr "Prioridad"
 
 #: codenerix_email/models.py:77 codenerix_email/models.py:153
-#: codenerix_email/views.py:152
+#: codenerix_email/views.py:153
 msgid "Sending"
 msgstr "Enviando"
 
 #: codenerix_email/models.py:80 codenerix_email/models.py:151
-#: codenerix_email/models.py:158 codenerix_email/views.py:153
+#: codenerix_email/models.py:158 codenerix_email/views.py:154
 msgid "Sent"
 msgstr "Enviado"
 
@@ -182,22 +182,22 @@ msgstr "PK"
 msgid "CID can contains only number and letters with no spaces"
 msgstr "El CID sólo puede contener números y letras sin espacios"
 
-#: codenerix_email/views.py:114 codenerix_email/views.py:159
+#: codenerix_email/views.py:115 codenerix_email/views.py:160
 msgid "Emails"
 msgstr "Emails"
 
-#: codenerix_email/views.py:114
+#: codenerix_email/views.py:115
 msgid "Email Template"
 msgstr "Template de Email"
 
-#: codenerix_email/views.py:154
+#: codenerix_email/views.py:155
 msgid "Not sent!"
 msgstr "¡No enviado!"
 
-#: codenerix_email/views.py:155
+#: codenerix_email/views.py:156
 msgid "Waiting"
 msgstr "Esperando"
 
-#: codenerix_email/views.py:159
+#: codenerix_email/views.py:160
 msgid "Email Messages"
 msgstr "Mensajes de Email"
