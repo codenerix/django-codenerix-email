@@ -49,8 +49,10 @@ CONTENT_SUBTYPES = (
 )
 
 
-def ensure_header(headers, key, value):
-    if key not in headers:
+def ensure_header(headers, key, value, headers_keys=None):
+    if headers_keys is None:
+        headers_keys = [k.lower() for k in headers.keys()]
+    if key.lower() not in headers_keys:
         headers[key] = value
     return headers
 
@@ -186,13 +188,34 @@ class EmailMessage(CodenerixModel, Debugger):
         # Get headers
         headers = self.headers or {}
 
+        # Header keys
+        headers_keys = [k.lower() for k in headers.keys()]
+
         # Ensure unsubscribe headers
         if self.unsubscribe_url:
             ensure_header(
-                headers, "List-Unsubscribe", f"<{self.unsubscribe_url}>"
+                headers,
+                "List-Unsubscribe",
+                f"<{self.unsubscribe_url}>",
+                headers_keys,
             )
             ensure_header(
-                headers, "List-Unsubscribe-Post", "List-Unsubscribe=One-Click"
+                headers,
+                "List-Unsubscribe-Post",
+                "List-Unsubscribe=One-Click",
+                headers_keys,
+            )
+
+        # Prepare message ID info
+        if "Message-ID".lower() not in headers_keys:
+            ecid = self.uuid.hex
+            edomain = settings.EMAIL_FROM.split("@")[-1]
+            ets = int(timezone.now().timestamp())
+            ensure_header(
+                headers,
+                "Message-ID",
+                f"<{ecid}-{ets}@{edomain}>",
+                headers_keys,
             )
 
         # Return headers
@@ -552,6 +575,7 @@ class EmailTemplate(CodenerixModel):
         e.body = Template(getattr(self, lang).body).render(Context(context))
         e.efrom = Template(self.efrom).render(Context(context))
         e.content_subtype = self.content_subtype
+
         return e
 
     def clean(self):

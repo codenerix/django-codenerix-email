@@ -22,6 +22,7 @@ import json
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.utils import timezone
 
 from codenerix_lib.debugger import Debugger
 from codenerix_email.models import EmailMessage, EmailTemplate  # type: ignore
@@ -131,6 +132,15 @@ Django Codenerix Email v{}
                 email_message.efrom = settings.DEFAULT_FROM_EMAIL
                 email_message.eto = email
 
+                # Prepare message ID info
+                ecid = email_message.uuid.hex
+                edomain = settings.EMAIL_FROM.split("@")[-1]
+                ets = int(timezone.now().timestamp())
+                email_message.headers = {
+                    "Message-ID": f"<{ecid}-{ets}@{edomain}>",
+                    "X-Codenerix-Email": "Test",
+                }
+
                 if stdout:
                     self.debug(
                         f"Sending email to {name} <{email}> "
@@ -147,6 +157,15 @@ Django Codenerix Email v{}
             email_message = email_message_factory(context, language)
             email_message.efrom = settings.DEFAULT_FROM_EMAIL
             email_message.eto = email
+
+            # Prepare message ID info
+            ecid = email_message.uuid.hex
+            edomain = settings.EMAIL_FROM.split("@")[-1]
+            ets = int(timezone.now().timestamp())
+            email_message.headers = {
+                "Message-ID": f"<{ecid}-{ets}@{edomain}>",
+                "X-Codenerix-Email": "Test",
+            }
 
             if stdout:
                 self.debug(
