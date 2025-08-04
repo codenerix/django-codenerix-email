@@ -115,6 +115,23 @@ class EmailTemplateList(GenList):
         "bread": [_("Emails"), _("Email Template")],
     }
 
+    def __fields__(self, info):
+        fields = []
+        fields.append(("pk", _("PK"), 100))
+        fields.append(("cid", _("CID"), 100))
+        fields.append(("efrom", _("From"), 100))
+        fields.append(
+            (
+                f"{self.language}__subject",
+                _("Subject"),
+                100,
+                None,
+                "shorttext:150",
+            )
+        )
+        fields.append(("content_subtype", _("Content Subtype"), 100))
+        return fields
+
 
 class EmailTemplateCreate(MultiForm, GenCreate):
     model = EmailTemplate

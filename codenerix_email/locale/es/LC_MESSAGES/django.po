@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 06:41+0100\n"
+"POT-Creation-Date: 2025-08-04 07:06+0200\n"
 "PO-Revision-Date: 2024-10-21 08:33+0200\n"
 "Last-Translator: abcdabcdabcdabcd  <yo@br0th3r.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,8 +27,8 @@ msgstr "Detalles"
 msgid "System"
 msgstr "Sistema"
 
-#: codenerix_email/forms.py:114 codenerix_email/models.py:72
-#: codenerix_email/models.py:574 codenerix_email/models.py:579
+#: codenerix_email/forms.py:114 codenerix_email/models.py:74
+#: codenerix_email/models.py:598 codenerix_email/models.py:603
 msgid "Body"
 msgstr "Cuerpo"
 
@@ -40,113 +40,113 @@ msgstr "Texto normal"
 msgid "HTML Web"
 msgstr "Web HTML"
 
-#: codenerix_email/models.py:60 codenerix_email/models.py:121
-#: codenerix_email/models.py:159
+#: codenerix_email/models.py:62 codenerix_email/models.py:123
+#: codenerix_email/models.py:161
 msgid "UUID"
 msgstr "UUID"
 
-#: codenerix_email/models.py:67 codenerix_email/models.py:499
-#: codenerix_email/models.py:513
+#: codenerix_email/models.py:69 codenerix_email/models.py:522
+#: codenerix_email/models.py:536
 msgid "From"
 msgstr "Desde"
 
-#: codenerix_email/models.py:68 codenerix_email/models.py:116
-#: codenerix_email/models.py:167
+#: codenerix_email/models.py:70 codenerix_email/models.py:118
+#: codenerix_email/models.py:169
 msgid "To"
 msgstr "Para"
 
-#: codenerix_email/models.py:70 codenerix_email/models.py:117
-#: codenerix_email/models.py:573 codenerix_email/models.py:578
+#: codenerix_email/models.py:72 codenerix_email/models.py:119
+#: codenerix_email/models.py:597 codenerix_email/models.py:602
 msgid "Subject"
 msgstr "Asunto"
 
-#: codenerix_email/models.py:74 codenerix_email/models.py:111
-#: codenerix_email/models.py:160
+#: codenerix_email/models.py:76 codenerix_email/models.py:113
+#: codenerix_email/models.py:162
 msgid "Priority"
 msgstr "Prioridad"
 
-#: codenerix_email/models.py:77 codenerix_email/models.py:153
+#: codenerix_email/models.py:79 codenerix_email/models.py:155
 #: codenerix_email/views.py:153
 msgid "Sending"
 msgstr "Enviando"
 
-#: codenerix_email/models.py:80 codenerix_email/models.py:151
-#: codenerix_email/models.py:158 codenerix_email/views.py:154
+#: codenerix_email/models.py:82 codenerix_email/models.py:153
+#: codenerix_email/models.py:160 codenerix_email/views.py:154
 msgid "Sent"
 msgstr "Enviado"
 
-#: codenerix_email/models.py:83 codenerix_email/models.py:154
+#: codenerix_email/models.py:85 codenerix_email/models.py:156
 msgid "Error"
 msgstr "Error"
 
-#: codenerix_email/models.py:86 codenerix_email/models.py:118
-#: codenerix_email/models.py:168
+#: codenerix_email/models.py:88 codenerix_email/models.py:120
+#: codenerix_email/models.py:170
 msgid "Retries"
 msgstr "Reintentos"
 
-#: codenerix_email/models.py:88 codenerix_email/models.py:119
+#: codenerix_email/models.py:90 codenerix_email/models.py:121
 msgid "Next retry"
 msgstr "Siguiente reintento"
 
-#: codenerix_email/models.py:89
+#: codenerix_email/models.py:91
 msgid "Log"
 msgstr "Log"
 
-#: codenerix_email/models.py:91 codenerix_email/models.py:114
-#: codenerix_email/models.py:162
+#: codenerix_email/models.py:93 codenerix_email/models.py:116
+#: codenerix_email/models.py:164
 msgid "Opened"
 msgstr "Abierto"
 
-#: codenerix_email/models.py:94 codenerix_email/models.py:123
-#: codenerix_email/models.py:501 codenerix_email/models.py:514
+#: codenerix_email/models.py:96 codenerix_email/models.py:125
+#: codenerix_email/models.py:524 codenerix_email/models.py:537
 msgid "Content Subtype"
 msgstr "Subtipo de contenido"
 
-#: codenerix_email/models.py:102
+#: codenerix_email/models.py:104
 msgid "Unsubscribe URL"
 msgstr "URL de cancelación de suscripción"
 
-#: codenerix_email/models.py:104
+#: codenerix_email/models.py:106
 msgid "Headers"
 msgstr "Cabeceras"
 
-#: codenerix_email/models.py:110
+#: codenerix_email/models.py:112
 msgid "Send"
 msgstr "Enviar"
 
-#: codenerix_email/models.py:112
+#: codenerix_email/models.py:114
 msgid "Created"
 msgstr "Creado"
 
-#: codenerix_email/models.py:113
+#: codenerix_email/models.py:115
 msgid "Updated"
 msgstr "Actualizado"
 
-#: codenerix_email/models.py:120 codenerix_email/models.py:169
+#: codenerix_email/models.py:122 codenerix_email/models.py:171
 msgid "ID"
 msgstr "ID"
 
-#: codenerix_email/models.py:122
+#: codenerix_email/models.py:124
 msgid "Unsubscribe"
 msgstr "Cancelar suscripción"
 
-#: codenerix_email/models.py:152
+#: codenerix_email/models.py:154
 msgid "Pending"
 msgstr "Pendiente"
 
-#: codenerix_email/models.py:164
+#: codenerix_email/models.py:166
 msgid "Yes"
 msgstr "Si"
 
-#: codenerix_email/models.py:164
+#: codenerix_email/models.py:166
 msgid "No"
 msgstr "No"
 
-#: codenerix_email/models.py:177
+#: codenerix_email/models.py:179
 msgid "HEADERS must be a Dictionary"
 msgstr "Las CABECERAS deben ser un Diccionario"
 
-#: codenerix_email/models.py:316
+#: codenerix_email/models.py:339
 msgid ""
 "Programming ERROR: You are using content_subtype, this value has been "
 "DEPRECATED and will be remove in future versions."
@@ -154,31 +154,31 @@ msgstr ""
 "ERROR de programación: está utilizando content_subtype, este valor ha "
 "quedado DESPRECADO y se eliminará en versiones futuras."
 
-#: codenerix_email/models.py:479 codenerix_email/models.py:489
+#: codenerix_email/models.py:502 codenerix_email/models.py:512
 msgid "Filename"
 msgstr "Nombre de fichero"
 
-#: codenerix_email/models.py:482 codenerix_email/models.py:490
+#: codenerix_email/models.py:505 codenerix_email/models.py:513
 msgid "Mimetype"
 msgstr "Mimetype"
 
-#: codenerix_email/models.py:484 codenerix_email/models.py:491
+#: codenerix_email/models.py:507 codenerix_email/models.py:514
 msgid "Path"
 msgstr "Ruta"
 
-#: codenerix_email/models.py:488
+#: codenerix_email/models.py:511
 msgid "Email"
 msgstr "Email"
 
-#: codenerix_email/models.py:497 codenerix_email/models.py:512
+#: codenerix_email/models.py:520 codenerix_email/models.py:535
 msgid "CID"
 msgstr "CID"
 
-#: codenerix_email/models.py:511
+#: codenerix_email/models.py:534
 msgid "PK"
 msgstr "PK"
 
-#: codenerix_email/models.py:563
+#: codenerix_email/models.py:587
 msgid "CID can contains only number and letters with no spaces"
 msgstr "El CID sólo puede contener números y letras sin espacios"
 
