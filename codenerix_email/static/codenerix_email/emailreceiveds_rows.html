@@ -1,0 +1,24 @@
+<td
+    ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
+    class="text-nowrap">{{row.date_received|codenerix}}</td>
+<td
+    ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
+    class="text-nowrap">{{row.get_bounce_type_display|codenerix}}</td>
+<td
+    ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
+    class="text-nowrap">{{row.efrom|codenerix}}</td>
+<td
+    ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
+    class="text-nowrap">{{row.eto|codenerix}}</td>
+<td
+    ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
+    class="text-nowrap">{{row.subject|codenerix}}</td>
+<td
+    ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
+    ng-click="$event.stopPropagation();"
+    class="text-nowrap">
+    <a href='/codenerix_email/emailmessages#/{{row.email__pk}}'>{{row.email__uuid|codenerix}}</a>
+</td>
+<td
+    ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
+        class="text-nowrap">{{row.imap_id|codenerix}}</td>

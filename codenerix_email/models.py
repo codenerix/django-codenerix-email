@@ -24,6 +24,7 @@ import re
 import ssl
 import smtplib
 from uuid import uuid4
+from typing import Optional
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -32,8 +33,10 @@ from django.template import Context, Template
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db.models import Q
+from django.utils.safestring import SafeString
 
 from codenerix.models import CodenerixModel
+from codenerix.helpers import obj_to_html
 from codenerix_lib.debugger import Debugger
 from codenerix.lib.genmail import (  # noqa: N817
     EmailMessage as EM,
@@ -46,6 +49,13 @@ CONTENT_SUBTYPE_HTML = "html"
 CONTENT_SUBTYPES = (
     (CONTENT_SUBTYPE_PLAIN, _("Plain")),
     (CONTENT_SUBTYPE_HTML, _("HTML Web")),
+)
+
+BOUNCE_SOFT = "S"
+BOUNCE_HARD = "H"
+BOUNCE_TYPES = (
+    (BOUNCE_SOFT, _("Soft")),
+    (BOUNCE_HARD, _("Hard")),
 )
 
 
@@ -174,6 +184,18 @@ class EmailMessage(CodenerixModel, Debugger):
     def __unicode__(self):
         return "{} ({})".format(self.eto, self.pk)
 
+    @property
+    def bounces_soft(self):
+        return self.receiveds.filter(bounce_type=BOUNCE_SOFT).count()
+
+    @property
+    def bounces_hard(self):
+        return self.receiveds.filter(bounce_type=BOUNCE_HARD).count()
+
+    @property
+    def bounces_total(self):
+        return self.receiveds.filter(bounce_type__isnull=False).count()
+
     def clean(self):
         if not isinstance(self.headers, dict):
             raise ValidationError(_("HEADERS must be a Dictionary"))
@@ -183,7 +205,7 @@ class EmailMessage(CodenerixModel, Debugger):
             self.opened = timezone.now()
             self.save()
 
-    def get_headers(self):
+    def get_headers(self, legacy=False):
 
         # Get headers
         headers = self.headers or {}
@@ -218,6 +240,36 @@ class EmailMessage(CodenerixModel, Debugger):
                 headers_keys,
             )
 
+        # Prepare message Tracking info
+        if "X-Codenerix-Tracking-ID".lower() not in headers_keys:
+            ets = int(timezone.now().timestamp())
+            ensure_header(
+                headers,
+                "X-Codenerix-Tracking-ID",
+                self.uuid.hex,
+                headers_keys,
+            )
+
+        # Prepare Return-Path
+        if "Return-Path".lower() not in headers_keys:
+            if not legacy:
+                email_bounce = getattr(
+                    settings,
+                    "CLIENT_EMAIL_RETURN_PATH",
+                    settings.CLIENT_EMAIL_FROM,
+                )
+            else:
+                email_bounce = getattr(
+                    settings, "EMAIL_RETURN_PATH", settings.EMAIL_FROM
+                )
+            ensure_header(
+                headers,
+                "Return-Path",
+                email_bounce,
+                headers_keys,
+            )
+
+        print(headers)
         # Return headers
         return headers
 
@@ -405,7 +457,7 @@ class EmailMessage(CodenerixModel, Debugger):
                     from_email=self.efrom,
                     to=[self.eto],
                     connection=connection,
-                    headers=self.get_headers(),
+                    headers=self.get_headers(legacy),
                 )
                 email.content_subtype = self.content_subtype
                 for at in self.attachments.all():
@@ -513,6 +565,101 @@ class EmailAttachment(CodenerixModel):
         fields.append(("mime", _("Mimetype"), 100))
         fields.append(("path", _("Path"), 100))
         return fields
+
+
+class EmailReceived(CodenerixModel):
+    imap_id = models.IntegerField(
+        _("IMAP ID"), blank=False, null=False, default=0
+    )
+    eid = models.CharField(
+        _("Message ID"),
+        max_length=512,
+        unique=True,
+        help_text=_("Unique Message-ID header"),
+    )
+    efrom = models.EmailField(_("From"), blank=False, null=False)
+    eto = models.EmailField(_("To"), blank=False, null=False)
+    subject = models.CharField(
+        _("Subject"), max_length=256, blank=False, null=False
+    )
+    headers = models.JSONField(_("Headers"), blank=True, null=True)
+    body_text = models.TextField(_("Body (Text)"), blank=True, null=False)
+    body_html = models.TextField(_("Body (HTML)"), blank=True, null=False)
+    date_received = models.DateTimeField(_("Date received"), auto_now_add=True)
+
+    email = models.ForeignKey(
+        EmailMessage,
+        on_delete=models.CASCADE,
+        blank=False,
+        null=True,
+        related_name="receiveds",
+    )
+
+    bounce_type = models.CharField(
+        _("Bounce Type"),
+        max_length=1,
+        choices=BOUNCE_TYPES,
+        blank=True,
+        null=True,
+        default=None,
+    )
+    bounce_reason = models.CharField(
+        _("Bounce Reason"), max_length=512, blank=True, null=True, default=None
+    )
+
+    def __fields__(self, info):
+        fields = []
+        fields.append(("date_received", _("Date received")))
+        fields.append(("bounce_type", None))
+        fields.append(("get_bounce_type_display", _("Bounce Type")))
+        fields.append(("efrom", _("From")))
+        fields.append(("eto", _("To")))
+        fields.append(("subject", _("Subject")))
+        fields.append(("email__uuid", _("Related email")))
+        fields.append(("email__pk", None))
+        fields.append(("imap_id", _("IMAP ID")))
+        return fields
+
+    def __searchF__(self, info):  # noqa: N802
+        def bounce_filter(key):
+            if key == "-":
+                return Q(bounce_type__isnull=False)
+            else:
+                return Q(bounce_type=key)
+
+        return {
+            "efrom": (_("From"), lambda x: Q(efrom__icontains=x), "input"),
+            "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
+            "email__uuid": (
+                _("Related email"),
+                lambda x: Q(email__uuid__icontains=x),
+                "input",
+            ),
+            "get_bounce_type_display": (
+                _("Bounce Type"),
+                bounce_filter,
+                [
+                    (BOUNCE_SOFT, _("Soft")),
+                    (BOUNCE_HARD, _("Hard")),
+                    (None, _("No Bounce")),
+                    ("-", _("Only Bounces")),
+                ],
+            ),
+        }
+
+    def __prettyfy__(self, obj) -> Optional[SafeString]:
+        if obj is None:
+            return None
+
+        # Convert to HTML
+        (kind, html) = obj_to_html(obj)
+
+        # Return as HTML
+        return SafeString(f" <b[ {kind} ]></b><br/>") + html
+
+    @property
+    def headers_pretty(self) -> Optional[SafeString]:
+        return self.__prettyfy__(self.headers)
 
 
 class EmailTemplate(CodenerixModel):

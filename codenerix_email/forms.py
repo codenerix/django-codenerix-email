@@ -23,7 +23,12 @@ from django.conf import settings
 
 from codenerix.forms import GenModelForm
 from codenerix.widgets import WysiwygAngularInput
-from codenerix_email.models import EmailTemplate, EmailMessage, MODELS
+from codenerix_email.models import (
+    EmailTemplate,
+    EmailMessage,
+    EmailReceived,
+    MODELS,
+)
 
 
 class EmailTemplateForm(GenModelForm):
@@ -114,6 +119,59 @@ class EmailMessageForm(GenModelForm):
                 _("Body"),
                 12,
                 ["body", 3],
+            ),
+        ]
+
+
+class EmailReceivedForm(GenModelForm):
+    class Meta:
+        model = EmailReceived
+        exclude = ["sending", "log"]
+
+    # def __groups__(self):
+    #     return [
+    #         (
+    #             _("Details"),
+    #             12,
+    #             ["efrom", 2],
+    #             ["eto", 2],
+    #             ["subject", 4],
+    #             ["priority", 1],
+    #             ["sent", 1],
+    #             ["error", 1],
+    #             ["retries", 1],
+    #             ["body", 12],
+    #         )
+    #     ]
+
+    @staticmethod
+    def __groups_details__():
+        return [
+            (
+                _("Details"),
+                6,
+                ["imap_id", 3],
+                ["eid", 3],
+                ["created", 3],
+                ["updated", 3],
+                ["efrom", 3],
+                ["eto", 3],
+                ["subject", 3],
+                ["bounce_type", 3],
+                ["bounce_reason", 3],
+                ["email", 3],
+            ),
+            (
+                _("System"),
+                6,
+                ["headers", None],
+                ["headers_pretty", 3],
+            ),
+            (
+                _("Body"),
+                12,
+                ["body_text", 12],
+                ["body_html", 12],
             ),
         ]
 

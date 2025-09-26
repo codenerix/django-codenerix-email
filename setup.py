@@ -41,7 +41,8 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
     install_requires=[
-        "django_codenerix>=5.0.10",
-        "django_codenerix_extensions>=4.0.3",
+        "django_codenerix>=5.0.40",
+        "django_codenerix_extensions>=4.0.4",
+        "IMAPClient>=3.0.1",
     ],
 )
