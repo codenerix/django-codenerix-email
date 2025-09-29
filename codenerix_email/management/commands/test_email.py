@@ -25,13 +25,12 @@ from django.conf import settings
 from django.utils import timezone
 
 from codenerix_lib.debugger import Debugger
-from codenerix_email.models import EmailMessage, EmailTemplate  # type: ignore
+from codenerix_email.models import EmailMessage, EmailTemplate
 from codenerix_email import __version__
 from django.core.management import CommandError
 
 
 class Command(BaseCommand, Debugger):
-
     # Show this when the user types help
     help = "Test"
 
@@ -68,7 +67,6 @@ class Command(BaseCommand, Debugger):
         )
 
     def handle(self, *args, **options):
-
         # Autoconfigure Debugger
         self.set_name("CODENERIX-EMAIL")
         self.set_debug()
@@ -90,7 +88,6 @@ class Command(BaseCommand, Debugger):
 
         # If no template is provided, use the default one
         if template is None:
-
             # Get the default template
             message = """Hello,
 
@@ -125,7 +122,6 @@ Django Codenerix Email v{}
 
         # If no email is provided, send to all admins
         if email is None:
-
             # Send email to all admins
             for name, email in settings.ADMINS:
                 email_message = email_message_factory(context, language)
@@ -152,7 +148,6 @@ Django Codenerix Email v{}
                     email_message.save()
                     email_message.send(legacy=False, silent=False)
         else:
-
             # Send email to the specified address
             email_message = email_message_factory(context, language)
             email_message.efrom = settings.DEFAULT_FROM_EMAIL

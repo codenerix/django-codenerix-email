@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.31) stable; urgency=medium
+
+  * Several improvements on type checking
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Mon, 29 Sep 2025 08:36:00 +0200
+
+
 django_codenerix_email (4.0.30) stable; urgency=medium
 
   * Added support to receive emails throught IMAP, analize bounces and relate with sent emails

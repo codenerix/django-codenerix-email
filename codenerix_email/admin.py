@@ -20,7 +20,12 @@
 
 from django.conf import settings
 from django.contrib import admin
-from codenerix_email.models import EmailMessage, EmailAttachment, EmailTemplate, MODELS
+from codenerix_email.models import (
+    EmailMessage,
+    EmailAttachment,
+    EmailTemplate,
+    MODELS,
+)
 
 admin.site.register(EmailMessage)
 admin.site.register(EmailAttachment)
@@ -29,8 +34,7 @@ admin.site.register(EmailTemplate)
 
 for info in MODELS:
     model = info[1]
-    for lang in settings.LANGUAGES:
-        lang_code = lang[0]
-        query = "from .models import {}Text{}\n".format(model, lang_code.upper())
-        query += "admin.site.register({}Text{})\n".format(model, lang_code.upper())
+    for lang_code in settings.LANGUAGES_DATABASES:
+        query = f"from .models import {model}Text{lang_code}\n"
+        query += f"admin.site.register({model}Text{lang_code})\n"
         exec(query)

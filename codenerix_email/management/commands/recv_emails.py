@@ -12,7 +12,7 @@ from email.message import Message
 from email.parser import HeaderParser
 from typing import Optional
 
-from codenerix_email.models import (  # type: ignore
+from codenerix_email.models import (
     EmailMessage,
     EmailReceived,
     BOUNCE_SOFT,
@@ -24,15 +24,14 @@ from codenerix_email.models import (  # type: ignore
 logging.getLogger("imapclient").setLevel(logging.WARNING)
 
 import imaplib  # noqa: E402
-from imapclient import IMAPClient  # type: ignore # noqa: E402
-from imapclient.exceptions import LoginError  # type:ignore # noqa: E402
+from imapclient import IMAPClient  # noqa: E402
+from imapclient.exceptions import LoginError  # noqa: E402
 
 
 class Command(BaseCommand):
     help = "Fetches new emails from the configured IMAP account."
 
     def add_arguments(self, parser):
-
         # Named (optional) arguments
         parser.add_argument(
             "--silent",
@@ -57,7 +56,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         # Get configuration
         self.verbose = not options["silent"]
         self.imap_id = options.get("imap_id")
@@ -74,7 +72,6 @@ class Command(BaseCommand):
 
         # Verify that IMAP settings are configured
         if settings.IMAP_EMAIL_HOST and settings.IMAP_EMAIL_PORT:
-
             try:
                 # Connect to the IMAP server
                 server = IMAPClient(
@@ -92,7 +89,6 @@ class Command(BaseCommand):
                 ) from e
 
             try:
-
                 # Login and select the inbox
                 try:
                     server.login(
@@ -137,7 +133,6 @@ class Command(BaseCommand):
                 )
 
             finally:
-
                 # Logout from the server
                 try:
                     server.logout()
@@ -212,7 +207,6 @@ class Command(BaseCommand):
 
         # If there are new messages, fetch and process them
         if messages_ids:
-
             # Fetch the full message and internal date
             fetched_data = server.fetch(
                 messages_ids, ["BODY.PEEK[]", "INTERNALDATE"]
@@ -221,7 +215,6 @@ class Command(BaseCommand):
             # Get the envelope (metadata) and the full body
             # Use IMAP IDs so identifiers do not change between sessions
             for imap_id, message_data in fetched_data.items():
-
                 # Filter out by IMAP ID if specified
                 if self.imap_id and str(imap_id) != self.imap_id:
                     continue
@@ -252,7 +245,6 @@ class Command(BaseCommand):
                 # Avoid processing duplicates
                 email_received = EmailReceived.objects.filter(eid=eid).first()
                 if self.rewrite or not email_received:
-
                     # Process multipart emails
                     body_plain = ""
                     body_html = ""
@@ -409,20 +401,16 @@ class Command(BaseCommand):
 
         # Method 2: Search in attached parts (for bounces and forwards)
         if not tracking_id:
-
             # Not found directly in headers
             # Search in attached parts (for bounces and forwards)
             if msg.is_multipart():
-
                 # Iterate through parts
                 for part in msg.walk():
-
                     # Get the content type of the part
                     content_type = part.get_content_type()
 
                     # We look for an attachment that is itself an email
                     if content_type == "message/rfc822":
-
                         # The payload of this part is the original email
                         # The payload is a list of messages, take the first one
                         original_msg_payload = part.get_payload()
@@ -437,11 +425,9 @@ class Command(BaseCommand):
                                 )
 
                     elif content_type == "text/rfc822-headers":
-
                         # The payload is the raw headers of the original email
                         headers_payload = part.get_payload(decode=True)
                         if isinstance(headers_payload, bytes):
-
                             # Decode using the specified charset
                             charset = part.get_content_charset() or "utf-8"
                             headers_text = headers_payload.decode(
@@ -456,35 +442,27 @@ class Command(BaseCommand):
 
             # Method 3: Search in the body text (fallback)
             if not tracking_id:
-
                 # The original email might be quoted as plain text.
                 body_text = ""
                 if msg.is_multipart():
-
                     # Concatenate all text/plain parts
                     for part in msg.walk():
-
                         # We only want text/plain parts
                         if part.get_content_type() == "text/plain":
-
                             # Get the decoded payload
                             payload = part.get_payload(decode=True)
                             if isinstance(payload, bytes):
-
                                 # Decode using the specified charset
                                 charset = part.get_content_charset() or "utf-8"
                                 body_text += payload.decode(
                                     charset, errors="ignore"
                                 )
                 else:
-
                     # Single part email, check if it's text/plain
                     if msg.get_content_type() == "text/plain":
-
                         # Get the decoded payload
                         payload = msg.get_payload(decode=True)
                         if isinstance(payload, bytes):
-
                             # Decode using the specified charset
                             charset = msg.get_content_charset() or "utf-8"
                             body_text = payload.decode(
@@ -493,7 +471,6 @@ class Command(BaseCommand):
 
                 # If we have body text, search for the header using regex
                 if body_text:
-
                     # We use a regex to find the header in the text
                     match = re.search(
                         r"X-Codenerix-Tracking-ID:\s*([a-fA-F0-9\-]{36})",
@@ -528,28 +505,22 @@ class Command(BaseCommand):
             msg.get_content_type() == "multipart/report"
             and msg.get_param("report-type") == "delivery-status"
         ):
-
             # Iterate through parts to find the delivery-status part
             for part in msg.walk():
-
                 # We look for the delivery-status part
                 if part.get_content_type() == "message/delivery-status":
-
                     # The payload is a list of headers
                     payload = part.get_payload()
                     if payload and isinstance(payload, list):
-
                         # The first part contains the status headers
                         status_headers = payload[0]
                         if isinstance(status_headers, Message):
-
                             # Extract Action and Status headers
                             action = status_headers.get("Action", "").lower()
                             status_code = status_headers.get("Status", "")
 
                             # Check if action indicates failure
                             if action == "failed":
-
                                 # Determine Hard/Soft by SMTP code (RFC3463)
                                 if status_code.startswith("5."):
                                     # 5.x.x: permanent failure (hard)
@@ -570,19 +541,16 @@ class Command(BaseCommand):
         # Method 2: Some mail servers include headers indicating a bounce
         if not bounce_type:
             if msg.get("X-Failed-Recipients"):
-
                 # Presence of this header usually indicates a hard bounce
                 bounce_type = BOUNCE_HARD
                 bounce_reason = "Unknown (X-Failed-Recipients)"
 
             else:
-
                 # Check for Auto-Submitted header
                 if msg.get("Auto-Submitted", "").lower() in (
                     "auto-replied",
                     "auto-generated",
                 ):
-
                     # It could be a bounce, but also an "Out of Office",
                     # so we combine it with a keyword search.
                     subject = msg.get("Subject", "").lower()
@@ -594,26 +562,22 @@ class Command(BaseCommand):
 
                     # If we find bounce keywords in the subject
                     if any(keyword in subject for keyword in bounce_keywords):
-
                         # Assume is a hard bounce
                         bounce_type = BOUNCE_HARD
                         bounce_reason = "Unknown (Auto-Submitted + Keyword)"
 
         # Method 3: keyword search (less reliable)
         if not bounce_type:
-
             # We look for common bounce keywords in the From or Subject headers
             # We avoid false positives by requiring specific keywords.
             from_header = msg.get("From", "").lower()
             subject_header = msg.get("Subject", "").lower()
 
             if "mailer-daemon@" in from_header or "postmaster@" in from_header:
-
                 # Common bounce sender addresses
                 bounce_type = BOUNCE_HARD
                 bounce_reason = "Unknown (From Keyword)"
             else:
-
                 # Check subject for common bounce keywords
                 bounce_keywords = [
                     "undelivered",

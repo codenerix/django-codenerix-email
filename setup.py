@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-import codenerix_email
+from codenerix_email import __version__, __authors__
 
 with open(os.path.join(os.path.dirname(__file__), "README.rst")) as readme:
     README = readme.read()
@@ -11,15 +11,16 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name="django_codenerix_email",
-    version=codenerix_email.__version__,
+    version=__version__,
     packages=["codenerix_email"],
     include_package_data=True,
     zip_safe=False,
     license="Apache License Version 2.0",
-    description="Codenerix Email is a module that enables CODENERIX to set send emails in a general manner.",
+    description="Codenerix Email is a module that enables CODENERIX to "
+    "set send emails in a general manner.",
     long_description=README,
     url="https://github.com/codenerix/django-codenerix-email",
-    author=", ".join(codenerix_email.__authors__),
+    author=", ".join(__authors__),
     keywords=["django", "codenerix", "management", "erp", "crm", "send email"],
     platforms=["OS Independent"],
     classifiers=[
@@ -41,7 +42,7 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
     install_requires=[
-        "django_codenerix>=5.0.40",
+        "django_codenerix>=5.0.43",
         "django_codenerix_extensions>=4.0.4",
         "IMAPClient>=3.0.1",
     ],

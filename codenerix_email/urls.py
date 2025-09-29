@@ -26,8 +26,6 @@ from codenerix_email.views import (
     EmailTemplateUpdate,
     EmailTemplateUpdateModal,
     EmailTemplateDelete,
-)
-from codenerix_email.views import (
     EmailMessageList,
     EmailMessageCreate,
     EmailMessageCreateModal,
@@ -35,8 +33,6 @@ from codenerix_email.views import (
     EmailMessageUpdateModal,
     EmailMessageDelete,
     EmailMessageDetails,
-)
-from codenerix_email.views import (
     EmailReceivedList,
     EmailReceivedDetails,
     EmailReceivedSubList,

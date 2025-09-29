@@ -4,6 +4,4 @@ include README.rst
 exclude *.pyc
 exclude __pycache__
 exclude .ropeproject
-recursive-include codenerix_email/management *
-recursive-include codenerix_email/migrations *
-recursive-include codenerix_email/static *
+recursive-include codenerix_email *

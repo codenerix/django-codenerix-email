@@ -18,11 +18,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
+
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
 from codenerix.forms import GenModelForm
-from codenerix.widgets import WysiwygAngularInput
 from codenerix_email.models import (
     EmailTemplate,
     EmailMessage,
@@ -34,7 +35,7 @@ from codenerix_email.models import (
 class EmailTemplateForm(GenModelForm):
     class Meta:
         model = EmailTemplate
-        exclude = []
+        exclude: list[Any] = []
 
     def __groups__(self):
         return [
@@ -196,7 +197,7 @@ class {model}TextForm{lang}(GenModelForm):\n
             query += """
                 ['subject', 12, None, None, None, None, None, ["ng-change=refresh_lang_field('subject', '{model}TextForm', [{languages}])"]],
                 ['body', 12, None, None, None, None, None, ["ng-blur=refresh_lang_field('body', '{model}TextForm', [{languages}])"]],
-            )]\n"""
+            )]\n"""  # noqa: E501
         else:
             query += """
                 ['subject', 12],

@@ -92,12 +92,10 @@ for info in MODELS:
 # EmailFollow
 class EmailFollow(View):
     def get(self, request, *args, **kwargs):
-
         # Get uuid from email
         uid = kwargs.get("uuid_ext", None)
 
         if uid:
-
             # Get email message or return 404
             email_message = get_object_or_404(EmailMessage, uuid=uid)
 
@@ -113,7 +111,6 @@ class EmailFollow(View):
             )
 
         else:
-
             # Return 404
             raise Http404
 

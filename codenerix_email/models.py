@@ -17,8 +17,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# type: ignore
 
 import re
 import ssl
@@ -37,7 +35,6 @@ from django.utils.safestring import SafeString
 
 from codenerix.models import CodenerixModel
 from codenerix.helpers import obj_to_html
-from codenerix_lib.debugger import Debugger
 from codenerix.lib.genmail import (  # noqa: N817
     EmailMessage as EM,
     get_connection,
@@ -67,7 +64,7 @@ def ensure_header(headers, key, value, headers_keys=None):
     return headers
 
 
-class EmailMessage(CodenerixModel, Debugger):
+class EmailMessage(CodenerixModel):
     uuid = models.UUIDField(
         _("UUID"),
         unique=True,
@@ -206,7 +203,6 @@ class EmailMessage(CodenerixModel, Debugger):
             self.save()
 
     def get_headers(self, legacy=False):
-
         # Get headers
         headers = self.headers or {}
 
@@ -288,10 +284,8 @@ class EmailMessage(CodenerixModel, Debugger):
 
         # Do we have to send emails
         if emails.count():
-
             # Get connection if not connected yet
             if connection is None:
-
                 # Connect
                 connection = cls.internal_connect(legacy)
 
@@ -308,7 +302,6 @@ class EmailMessage(CodenerixModel, Debugger):
                         debug=debug,
                     )
                 except Exception as e:
-
                     # Los the error into this email
                     if email.log is None:
                         email.log = ""
@@ -378,7 +371,6 @@ class EmailMessage(CodenerixModel, Debugger):
         debug=False,
         content_subtype=None,
     ):
-
         # Autoconfigure Debugger
         if debug:
             self.set_name("EmailMessage")
@@ -450,7 +442,6 @@ class EmailMessage(CodenerixModel, Debugger):
                     raise
 
             if connection:
-
                 email = EM(
                     subject=self.subject,
                     body=self.body,

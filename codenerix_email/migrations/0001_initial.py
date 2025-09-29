@@ -7,67 +7,177 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='EmailAttachment',
+            name="EmailAttachment",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True, verbose_name='Created')),
-                ('updated', models.DateTimeField(auto_now=True, verbose_name='Updated')),
-                ('filename', models.CharField(max_length=256, verbose_name='Filename')),
-                ('mime', models.CharField(max_length=256, verbose_name='Mimetype')),
-                ('path', models.FileField(upload_to=b'', verbose_name='Path')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Created"
+                    ),
+                ),
+                (
+                    "updated",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Updated"
+                    ),
+                ),
+                (
+                    "filename",
+                    models.CharField(max_length=256, verbose_name="Filename"),
+                ),
+                (
+                    "mime",
+                    models.CharField(max_length=256, verbose_name="Mimetype"),
+                ),
+                ("path", models.FileField(upload_to="", verbose_name="Path")),
             ],
             options={
-                'default_permissions': ('add', 'change', 'delete', 'view', 'list'),
-                'abstract': False,
+                "default_permissions": (
+                    "add",
+                    "change",
+                    "delete",
+                    "view",
+                    "list",
+                ),
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='EmailMessage',
+            name="EmailMessage",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True, verbose_name='Created')),
-                ('updated', models.DateTimeField(auto_now=True, verbose_name='Updated')),
-                ('efrom', models.EmailField(max_length=254, verbose_name='From')),
-                ('eto', models.EmailField(max_length=254, verbose_name='To')),
-                ('subject', models.CharField(max_length=256, verbose_name='Subject')),
-                ('body', models.TextField(verbose_name='Body')),
-                ('priority', models.PositiveIntegerField(default=5, verbose_name='Priority')),
-                ('sending', models.BooleanField(default=False, verbose_name='Sending')),
-                ('sent', models.BooleanField(default=False, verbose_name='Sent')),
-                ('log', models.TextField(blank=True, null=True, verbose_name='Log')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Created"
+                    ),
+                ),
+                (
+                    "updated",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Updated"
+                    ),
+                ),
+                (
+                    "efrom",
+                    models.EmailField(max_length=254, verbose_name="From"),
+                ),
+                ("eto", models.EmailField(max_length=254, verbose_name="To")),
+                (
+                    "subject",
+                    models.CharField(max_length=256, verbose_name="Subject"),
+                ),
+                ("body", models.TextField(verbose_name="Body")),
+                (
+                    "priority",
+                    models.PositiveIntegerField(
+                        default=5, verbose_name="Priority"
+                    ),
+                ),
+                (
+                    "sending",
+                    models.BooleanField(default=False, verbose_name="Sending"),
+                ),
+                (
+                    "sent",
+                    models.BooleanField(default=False, verbose_name="Sent"),
+                ),
+                (
+                    "log",
+                    models.TextField(
+                        blank=True, null=True, verbose_name="Log"
+                    ),
+                ),
             ],
             options={
-                'default_permissions': ('add', 'change', 'delete', 'view', 'list'),
-                'abstract': False,
+                "default_permissions": (
+                    "add",
+                    "change",
+                    "delete",
+                    "view",
+                    "list",
+                ),
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='EmailTemplate',
+            name="EmailTemplate",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True, verbose_name='Created')),
-                ('updated', models.DateTimeField(auto_now=True, verbose_name='Updated')),
-                ('cid', models.CharField(max_length=30, unique=True, verbose_name='CID')),
-                ('subject', models.TextField(blank=True, verbose_name='Subject')),
-                ('body', models.TextField(blank=True, verbose_name='Body')),
-                ('efrom', models.TextField(blank=True, verbose_name='From')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Created"
+                    ),
+                ),
+                (
+                    "updated",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Updated"
+                    ),
+                ),
+                (
+                    "cid",
+                    models.CharField(
+                        max_length=30, unique=True, verbose_name="CID"
+                    ),
+                ),
+                (
+                    "subject",
+                    models.TextField(blank=True, verbose_name="Subject"),
+                ),
+                ("body", models.TextField(blank=True, verbose_name="Body")),
+                ("efrom", models.TextField(blank=True, verbose_name="From")),
             ],
             options={
-                'default_permissions': ('add', 'change', 'delete', 'view', 'list'),
-                'abstract': False,
+                "default_permissions": (
+                    "add",
+                    "change",
+                    "delete",
+                    "view",
+                    "list",
+                ),
+                "abstract": False,
             },
         ),
         migrations.AddField(
-            model_name='emailattachment',
-            name='email',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='codenerix_email.EmailMessage'),
+            model_name="emailattachment",
+            name="email",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="attachments",
+                to="codenerix_email.EmailMessage",
+            ),
         ),
     ]
