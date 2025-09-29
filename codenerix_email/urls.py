@@ -33,8 +33,10 @@ from codenerix_email.views import (
     EmailMessageUpdateModal,
     EmailMessageDelete,
     EmailMessageDetails,
+    EmailMessageDetailsModal,
     EmailReceivedList,
     EmailReceivedDetails,
+    EmailReceivedDetailsModal,
     EmailReceivedSubList,
 )
 
@@ -91,6 +93,11 @@ urlpatterns = [
         name="CDNX_emails_emailmessages_details",
     ),
     re_path(
+        r"^emailmessages/(?P<cpk>\w+)/sublist/(?P<pk>\w+)/modal$",
+        EmailMessageDetailsModal.as_view(),
+        name="CDNX_emails_emailmessages_sublist_details_modal",
+    ),
+    re_path(
         r"^emailmessages/(?P<pk>\w+)/edit$",
         EmailMessageUpdate.as_view(),
         name="CDNX_emails_emailmessages_edit",
@@ -119,5 +126,10 @@ urlpatterns = [
         r"^emailreceiveds/(?P<pk>\w+)/sublist$",
         EmailReceivedSubList.as_view(),
         name="CDNX_emails_emailreceiveds_sublist",
+    ),
+    re_path(
+        r"^emailreceiveds/(?P<cpk>\w+)/sublist/(?P<pk>\w+)/modal$",
+        EmailReceivedDetailsModal.as_view(),
+        name="CDNX_emails_emailreceiveds_sublist_details_modal",
     ),
 ]

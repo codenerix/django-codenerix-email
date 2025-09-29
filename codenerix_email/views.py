@@ -39,6 +39,7 @@ from codenerix.views import (  # type: ignore
     GenUpdateModal,
     GenDelete,
     GenDetail,
+    GenDetailModal,
     SearchFilters,
 )
 from codenerix_email.models import (
@@ -294,6 +295,10 @@ class EmailMessageDetails(GenDetail):
     ]
 
 
+class EmailMessageDetailsModal(EmailMessageDetails, GenDetailModal):
+    pass
+
+
 class EmailMessageUpdate(GenUpdate):
     model = EmailMessage
     form_class = EmailMessageForm
@@ -334,6 +339,10 @@ class EmailReceivedDetails(GenDetail):
     groups = EmailReceivedForm.__groups_details__()
     show_details = True
     readonly = True
+
+
+class EmailReceivedDetailsModal(EmailReceivedDetails, GenDetailModal):
+    pass
 
 
 class EmailReceivedSubList(EmailReceivedList):
