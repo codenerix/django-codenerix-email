@@ -21,6 +21,7 @@
 import re
 import ssl
 import smtplib
+import logging
 from uuid import uuid4
 from typing import Optional
 
@@ -54,6 +55,8 @@ BOUNCE_TYPES = (
     (BOUNCE_SOFT, _("Soft")),
     (BOUNCE_HARD, _("Hard")),
 )
+
+logger = logging.getLogger("CodenerixEmail:EmailMessage")
 
 
 def ensure_header(headers, key, value, headers_keys=None):
@@ -371,13 +374,10 @@ class EmailMessage(CodenerixModel):
         content_subtype=None,
     ):
         # Autoconfigure Debugger
-        if debug:
-            self.set_name("EmailMessage")
-            self.set_debug()
 
         # Warn about subtype
         if content_subtype:
-            self.warning(
+            logger.warning(
                 _(
                     "Programming ERROR: You are using content_subtype, this "
                     "value has been DEPRECATED and will be remove in future "
@@ -389,13 +389,10 @@ class EmailMessage(CodenerixModel):
         if connection is None:
             # Connect
             if not silent or debug:
-                self.warning("Not connected, connecting...")
+                logger.warning("Not connected, connecting...")
             connection = self.connect(legacy)
 
         if self.eto:
-            if debug:
-                self.set_name("EmailMessage->{}".format(self.eto))
-
             # Manually open the connection
             error = None
             try:
@@ -408,7 +405,8 @@ class EmailMessage(CodenerixModel):
                 connection = None
                 exceptiontxt = str(type(e)).split(".")[-1].split("'")[0]
                 ci = getattr(self, "__connect_info", {})
-                error = "{}: {} [HOST={}:{} TLS={}]\n".format(
+                error = "{}-> {}: {} [HOST={}:{} TLS={}]\n".format(
+                    self.eto,
                     exceptiontxt,
                     e,
                     ci.get("host", "-"),
@@ -416,7 +414,7 @@ class EmailMessage(CodenerixModel):
                     ci.get("use_tls", "-"),
                 )
                 if not silent or debug:
-                    self.warning(error)
+                    logger.warning(error)
                 if self.log is None:
                     self.log = ""
                 self.log += f"{error}\n"
@@ -465,16 +463,16 @@ class EmailMessage(CodenerixModel):
                             self.sending = False
                             break
                     except ssl.SSLError as e:
-                        error = f"SSLError: {e}\n"
+                        error = f"{self.eto}: SSLError: {e}\n"
                         if not silent or debug:
-                            self.warning(error)
+                            logger.warning(error)
                         if self.log is None:
                             self.log = ""
                         self.log += f"{error}\n"
                     except smtplib.SMTPServerDisconnected as e:
-                        error = f"SMTPServerDisconnected: {e}\n"
+                        error = f"{self.eto}: SMTPServerDisconnected: {e}\n"
                         if not silent or debug:
-                            self.warning(error)
+                            logger.warning(error)
                         if self.log is None:
                             self.log = ""
                         self.log += f"{error}\n"
@@ -486,16 +484,16 @@ class EmailMessage(CodenerixModel):
                             OSError,
                             TimeoutError,
                         ) as e:
-                            error = f"SMTPServerReconnect: {e}\n"
+                            error = f"{self.eto}: SMTPServerReconnect: {e}\n"
                             if not silent or debug:
-                                self.warning(error)
+                                logger.warning(error)
                             if self.log is None:
                                 self.log = ""
                             self.log += f"{error}\n"
                     except smtplib.SMTPException as e:
-                        error = f"SMTPException: {e}\n"
+                        error = f"{self.eto}: SMTPException: {e}\n"
                         if not silent or debug:
-                            self.warning(error)
+                            logger.warning(error)
                         if self.log is None:
                             self.log = ""
                         self.log += f"{error}\n"
