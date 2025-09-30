@@ -57,7 +57,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Get configuration
-        self.verbose = not options["silent"]
+        self.silent = options["silent"]
+        self.verbose = not self.silent
         self.imap_id = options.get("imap_id")
         self.message_id = options.get("message_id")
         self.tracking_id = options.get("tracking_id")
@@ -70,45 +71,52 @@ class Command(BaseCommand):
                 self.style.SUCCESS("Starting IMAP email synchronization...")
             )
 
+        # Get configuration from settings
+        host = getattr(settings, "IMAP_EMAIL_HOST", None)
+        port = getattr(settings, "IMAP_EMAIL_PORT", 993)
+        user = getattr(settings, "IMAP_EMAIL_USER", None)
+        password = getattr(settings, "IMAP_EMAIL_PASSWORD", None)
+        ssl = getattr(settings, "IMAP_EMAIL_SSL", True)
+        folder = getattr(settings, "IMAP_EMAIL_INBOX_FOLDER", "INBOX")
+
         # Verify that IMAP settings are configured
-        if settings.IMAP_EMAIL_HOST and settings.IMAP_EMAIL_PORT:
+        if host is not None and port:
+            # Validate configuration
+            if user is None or password is None:
+                if self.silent:
+                    return
+                else:
+                    raise CommandError(
+                        "IMAP user or password not configured. Please set "
+                        "IMAP_EMAIL_USER and IMAP_EMAIL_PASSWORD in settings."
+                    )
+
             try:
                 # Connect to the IMAP server
-                server = IMAPClient(
-                    settings.IMAP_EMAIL_HOST,
-                    port=settings.IMAP_EMAIL_PORT,
-                    ssl=settings.IMAP_EMAIL_SSL,
-                )
+                server = IMAPClient(host, port=port, ssl=ssl)
             except Exception as e:
                 raise CommandError(
                     f"Failed to connect to IMAP server ("
-                    f"host={settings.IMAP_EMAIL_HOST}, "
-                    f"port={settings.IMAP_EMAIL_PORT}, "
-                    f"ssl={settings.IMAP_EMAIL_SSL and 'yes' or 'no'}"
+                    f"{host=}, "
+                    f"{port=}, "
+                    f"ssl={ssl and 'yes' or 'no'}"
                     f"): {e}"
                 ) from e
 
             try:
                 # Login and select the inbox
                 try:
-                    server.login(
-                        settings.IMAP_EMAIL_USER, settings.IMAP_EMAIL_PASSWORD
-                    )
+                    server.login(user, password)
                 except LoginError as e:
                     raise CommandError(
-                        f"Failed to login to IMAP server with user "
-                        f"'{settings.IMAP_EMAIL_USER}': {e}"
+                        f"Failed to login to IMAP server with {user=}: {e}"
                     ) from e
 
-                try:
-                    server.select_folder(
-                        settings.IMAP_EMAIL_INBOX_FOLDER, readonly=False
-                    )
-                except imaplib.IMAP4.error:
-                    raise CommandError(
-                        f"Failed to select inbox folder "
-                        f"'{settings.IMAP_EMAIL_INBOX_FOLDER}'"
-                    )
+                if folder:
+                    try:
+                        server.select_folder(folder, readonly=False)
+                    except imaplib.IMAP4.error:
+                        raise CommandError(f"Failed to select inbox {folder=}")
 
                 # Process emails
                 (created_count, overwritten_count) = self.process(server)
@@ -139,7 +147,7 @@ class Command(BaseCommand):
                 except Exception:
                     pass
 
-        else:
+        elif self.verbose:
             raise CommandError(
                 "IMAP settings not configured. Please set IMAP_EMAIL_HOST "
                 "and IMAP_EMAIL_PORT in settings."

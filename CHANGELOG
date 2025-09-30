@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.33) stable; urgency=medium
+
+  * Command recv_emails wont't fail if silent is enabled
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 30 Sep 2025 07:49:00 +0200
+
+
 django_codenerix_email (4.0.32) stable; urgency=medium
 
   * Added details modal window for sent and received emails
