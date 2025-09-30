@@ -18,7 +18,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import time
 
 from django.core.management.base import BaseCommand
@@ -27,15 +26,6 @@ from django.utils import timezone
 
 from codenerix_lib.debugger import Debugger
 from codenerix_email.models import EmailMessage
-
-# Deprecation warning
-if not sys.argv[0].startswith("email"):
-    import logging
-
-    logger = logging.getLogger("codenerix")
-    logger.warning(
-        "WARNING: 'send_email' is DEPRECATED, switch to 'emails_send' instead"
-    )
 
 
 class Command(BaseCommand, Debugger):

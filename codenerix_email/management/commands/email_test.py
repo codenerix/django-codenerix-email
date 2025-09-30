@@ -18,7 +18,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import json
 
 from django.core.management.base import BaseCommand
@@ -29,15 +28,6 @@ from codenerix_lib.debugger import Debugger
 from codenerix_email.models import EmailMessage, EmailTemplate
 from codenerix_email import __version__
 from django.core.management import CommandError
-
-# Deprecation warning
-if not sys.argv[0].startswith("email"):
-    import logging
-
-    logger = logging.getLogger("codenerix")
-    logger.warning(
-        "WARNING: 'test_email' is DEPRECATED, switch to 'email_test' instead"
-    )
 
 
 class Command(BaseCommand, Debugger):

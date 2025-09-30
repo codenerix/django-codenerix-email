@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.36) stable; urgency=medium
+
+  * Deprecation warning repaired
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 30 Sep 2025 12:08:00 +0200
+
+
 django_codenerix_email (4.0.35) stable; urgency=medium
 
   * Email commands deprecated to a new more standard name

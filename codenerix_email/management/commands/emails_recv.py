@@ -1,4 +1,3 @@
-import sys
 import re
 
 import logging
@@ -27,15 +26,6 @@ logging.getLogger("imapclient").setLevel(logging.WARNING)
 import imaplib  # noqa: E402
 from imapclient import IMAPClient  # noqa: E402
 from imapclient.exceptions import LoginError  # noqa: E402
-
-# Deprecation warning
-if not sys.argv[0].startswith("email"):
-    import logging
-
-    logger = logging.getLogger("codenerix")
-    logger.warning(
-        "WARNING: 'recv_emails' is DEPRECATED, switch to 'emails_recv' instead"
-    )
 
 
 class Command(BaseCommand):
