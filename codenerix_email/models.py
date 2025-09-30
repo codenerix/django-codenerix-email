@@ -265,7 +265,6 @@ class EmailMessage(CodenerixModel):
                 headers_keys,
             )
 
-        print(headers)
         # Return headers
         return headers
 

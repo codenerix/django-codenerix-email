@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.34) stable; urgency=medium
+
+  * Removed forgotten print in the code
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 30 Sep 2025 11:07:00 +0200
+
+
 django_codenerix_email (4.0.33) stable; urgency=medium
 
   * Command recv_emails wont't fail if silent is enabled
