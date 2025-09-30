@@ -371,20 +371,7 @@ class EmailMessage(CodenerixModel):
         legacy=False,
         silent=True,
         debug=False,
-        content_subtype=None,
     ):
-        # Autoconfigure Debugger
-
-        # Warn about subtype
-        if content_subtype:
-            logger.warning(
-                _(
-                    "Programming ERROR: You are using content_subtype, this "
-                    "value has been DEPRECATED and will be remove in future "
-                    "versions."
-                )
-            )
-
         # Get connection if not connected yet
         if connection is None:
             # Connect

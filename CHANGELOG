@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.37) stable; urgency=medium
+
+  * Content Subtype removed from send()
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 30 Sep 2025 12:31:00 +0200
+
+
 django_codenerix_email (4.0.36) stable; urgency=medium
 
   * Deprecation warning repaired
