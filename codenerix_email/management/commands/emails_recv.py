@@ -80,6 +80,9 @@ class Command(BaseCommand):
                 IMAP_EMAIL_PASSWORD = "your_password"
                 IMAP_EMAIL_SSL = True  #  (default: True)
                 IMAP_EMAIL_INBOX_FOLDER = "INBOX"  #  (default: "INBOX")
+                IMAP_EMAIL_SELECTOR = "UNSEEN"  #  (default: "UNSEEN")
+                IMAP_EMAIL_SEEN = True  #  (default: True)
+                IMAP_EMAIL_DELETE = False  #  (default: False)
                 IMAP_EMAIL_FILTERS = {
                     "SUBJECT": [r".*"],
                     "FROM": [r".*"],
@@ -291,7 +294,9 @@ class Command(BaseCommand):
 
         else:
             # Search by UNSEEN
-            messages_ids = server.search(["UNSEEN"])
+            messages_ids = server.search(
+                [getattr(settings, "IMAP_EMAIL_SELECTOR", "UNSEEN")]
+            )
             if self.verbose:
                 self.stdout.write(
                     self.style.SUCCESS(
@@ -440,8 +445,22 @@ class Command(BaseCommand):
                                     f"(FILTER: {filter_reason})"
                                 )
                             )
-                        # Mark the message as read to avoid reprocessing
-                        server.add_flags(imap_id, [b"\\Seen"])
+
+                        if getattr(settings, "IMAP_EMAIL_DELETE", False):
+                            # Delete the message from the server
+                            server.delete_messages(imap_id)
+                            server.expunge()
+                            if self.verbose:
+                                self.stdout.write(
+                                    self.style.SUCCESS(
+                                        f"Deleted email with IMAP ID: {imap_id}"
+                                    )
+                                )
+
+                        elif getattr(settings, "IMAP_EMAIL_SEEN", True):
+                            # Mark the message as read to avoid reprocessing
+                            server.add_flags(imap_id, [b"\\Seen"])
+
                         continue
 
                     # Create EmailReceived object if doesn't exist
@@ -513,9 +532,19 @@ class Command(BaseCommand):
                             )
                         )
 
-                # Mark the message as read
-                # (flag \Seen) avoid reprocessing
-                server.add_flags(imap_id, [b"\\Seen"])
+                if getattr(settings, "IMAP_EMAIL_DELETE", False):
+                    # Delete the message from the server
+                    server.delete_messages(imap_id)
+                    server.expunge()
+                    if self.verbose:
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f"Deleted email with IMAP ID: {imap_id}"
+                            )
+                        )
+                elif getattr(settings, "IMAP_EMAIL_SEEN", True):
+                    # Mark the message as read otherwise (to avoid reprocessing)
+                    server.add_flags(imap_id, [b"\\Seen"])
 
         return (created_count, overwrite_count)
 
