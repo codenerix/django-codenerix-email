@@ -12,7 +12,9 @@
     class="text-nowrap">{{row.eto|codenerix}}</td>
 <td
     ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
-    class="text-nowrap">{{row.subject|codenerix}}</td>
+    class="text-nowrap">
+    <span codenerix-html-compile='row.subject|codenerix:"shorttext:50"'></span>
+</td>
 <td
     ng-class="{'info': (!row.email__pk) && (!row.bounce_type), 'warning': row.bounce_type=='S', 'danger': row.bounce_type=='H', 'text-warning': row.bounce_type=='S', 'text-danger': row.bounce_type=='H'}"
     ng-click="$event.stopPropagation();"

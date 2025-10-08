@@ -1,4 +1,6 @@
 import re
+from textwrap import dedent
+from argparse import RawTextHelpFormatter
 
 import logging
 
@@ -31,7 +33,91 @@ from imapclient.exceptions import LoginError  # noqa: E402
 class Command(BaseCommand):
     help = "Fetches new emails from the configured IMAP account."
 
+    def create_parser(self, prog_name, subcommand, **kwargs):
+        """
+        Create and return the ArgumentParser instance for this command.
+        We are overriding this to use the RawTextHelpFormatter.
+        """
+        parser = super().create_parser(prog_name, subcommand, **kwargs)
+        parser.formatter_class = RawTextHelpFormatter
+        return parser
+
     def add_arguments(self, parser):
+        parser.epilog = dedent(
+            r"""
+            This command connects to the configured IMAP server, fetches new
+            emails, and saves them as ReceivedEmail objects in the database.
+
+            By default, it processes only unseen emails. You can use the
+            --all option to process all emails in the inbox.
+
+            You can filter by specific IMAP ID, Message-ID, or Tracking ID
+            using the respective options.
+
+            The --rewrite option allows overwriting existing received emails
+            with the same Message-ID.
+
+            Examples:
+                # Fetch unseen emails
+                python manage.py emails_recv
+
+                # Fetch all emails
+                python manage.py emails_recv --all
+
+                # Fetch email by specific IMAP ID
+                python manage.py emails_recv --imap-id 123
+
+                # Fetch email by specific Message-ID
+                python manage.py emails_recv --message-id "<...>"
+
+                # Fetch email by specific Tracking ID
+                python manage.py emails_recv --tracking-id "uuid"
+
+            Make sure to configure the IMAP settings in your Django settings:
+                IMAP_EMAIL_HOST = "imap.example.com"
+                IMAP_EMAIL_PORT = 993
+                IMAP_EMAIL_USER = "your_username"
+                IMAP_EMAIL_PASSWORD = "your_password"
+                IMAP_EMAIL_SSL = True  #  (default: True)
+                IMAP_EMAIL_INBOX_FOLDER = "INBOX"  #  (default: "INBOX")
+                IMAP_EMAIL_FILTERS = {
+                    "SUBJECT": [r".*"],
+                    "FROM": [r".*"],
+                    "MESSAGE-ID": [r".*"],
+                    "TO": [
+                        r"^bounce@becas\.com",
+                        r"^bounces@becas\.com",
+                        r"^no-reply@becas\.com",
+                        r"^hola@becas\.com",
+                        r"^tuasesor@becas\.com",
+                        r"^[a-zA-Z0-9._%+-]+@becas\.com",  # *@becas.com
+                    ],
+                    "BODY_PLAIN": [r".*"],
+                    "BODY_HTML": [r".*"],
+                    "HEADER": [("X-Custom-Header", r".*")],
+                    "BOUNCE_TYPE": ["hard", "soft"],
+                    "BOUNCE_REASON": [r".*"],
+                    "TRACKING_ID": True,
+                }
+
+            Filters are applied using AND logic across different fields and
+            OR logic within the same field.
+
+            The filters works as follows:
+                - SUBJECT, FROM, MESSAGE-ID, TO, BODY_PLAIN, BODY_HTML:
+                  regex match (case-insensitive) against the respective field.
+                - HEADER: tuple of (header name, regex) to match specific headers.
+                - BOUNCE_TYPE: "hard" or "soft" to filter by bounce type.
+                - BOUNCE_REASON: regex to match the bounce reason.
+                - TRACKING_ID: if True, only process emails with a tracking ID.
+
+            If IMAP_EMAIL_FILTERS is not set, all emails are processed.
+
+            Note: This command marks processed emails as read (Seen) to avoid
+            reprocessing them in future runs.
+"""  # noqa: E501
+        )
+
         # Named (optional) arguments
         parser.add_argument(
             "--silent",
@@ -244,6 +330,8 @@ class Command(BaseCommand):
                 efrom = msg.get("From")
                 eto = msg.get("To")
                 eid = msg.get("Message-ID")
+                ecc = msg.get("Cc")
+                ebc = msg.get("Bcc")
 
                 # If we can't get a Message-ID, use the IMAP ID as fallback
                 # to avoid duplicates
@@ -305,7 +393,8 @@ class Command(BaseCommand):
                                     self.stdout.write(
                                         self.style.WARNING(
                                             f"Tracking ID {tracking_id} found "
-                                            "but no matching sent email."
+                                            f"for IMAP ID {imap_id} but no "
+                                            "matching sent email."
                                         )
                                     )
 
@@ -327,6 +416,33 @@ class Command(BaseCommand):
                                 encoding or "utf-8", "ignore"
                             )
                         headers[header] = decoded_value
+
+                    # Let emails pass based on filtering system
+                    (filter_passed, filter_reason) = self.filter_pass(
+                        subject,
+                        efrom,
+                        eto,
+                        ecc,
+                        ebc,
+                        eid,
+                        body_plain,
+                        body_html,
+                        headers,
+                        bounce_type,
+                        bounce_reason,
+                        tracking_id,
+                    )
+                    if not filter_passed:
+                        if self.verbose:
+                            self.stdout.write(
+                                self.style.NOTICE(
+                                    f"Skipping email with IMAP ID: {imap_id} "
+                                    f"(FILTER: {filter_reason})"
+                                )
+                            )
+                        # Mark the message as read to avoid reprocessing
+                        server.add_flags(imap_id, [b"\\Seen"])
+                        continue
 
                     # Create EmailReceived object if doesn't exist
                     if not email_received:
@@ -360,7 +476,12 @@ class Command(BaseCommand):
                         created_count += 1
                         verb = "Created"
 
+                    # Show info about the processed email
                     if self.verbose:
+                        if overwriting:
+                            style = self.style.MIGRATE_HEADING
+                        else:
+                            style = self.style.WARNING
                         msg = (
                             f"{verb} email with IMAP ID: "
                             f"{imap_id} (link={tracking_id})"
@@ -371,19 +492,23 @@ class Command(BaseCommand):
                             )
                             bounce_reason_str = bounce_reason or "Unknown"
                             self.stdout.write(
-                                self.style.WARNING(
+                                style(
                                     f"{msg} "
                                     f"[{bounce_type_str} bounce, "
                                     f"reason={bounce_reason_str}]"
                                 )
                             )
                         else:
-                            self.stdout.write(self.style.SUCCESS(msg))
+                            if overwriting:
+                                style = self.style.MIGRATE_HEADING
+                            else:
+                                style = self.style.SUCCESS
+                            self.stdout.write(style(msg))
 
                 else:
                     if self.verbose:
                         self.stdout.write(
-                            self.style.WARNING(
+                            self.style.HTTP_INFO(
                                 f"Skipping email with IMAP ID: {imap_id} (DUP)"
                             )
                         )
@@ -599,3 +724,112 @@ class Command(BaseCommand):
                     bounce_reason = "Unknown (Subject Keyword)"
 
         return (bounce_type, bounce_reason)
+
+    def filter_pass(
+        self,
+        subject: str,
+        efrom: str,
+        eto: str,
+        ecc: str,
+        ebc: str,
+        eid: str,
+        body_plain: str,
+        body_html: str,
+        headers: dict,
+        bounce_type: Optional[str],
+        bounce_reason: Optional[str],
+        tracking_id: Optional[str],
+    ) -> tuple[bool, str]:
+        """
+        Applies filtering rules to determine if an email should be processed.
+
+        Returns:
+            True if the email should be processed, False otherwise.
+        """
+
+        # Get filters from settings
+        filters = getattr(settings, "IMAP_EMAIL_FILTERS", None)
+        if not filters:
+            # No filters defined, allow processing
+            return (True, "No filters defined, processing all.")
+
+        # Helper function to apply regex list to a value
+        def match_any(value: str, patterns: list) -> bool:
+            for pattern in patterns:
+                if re.search(pattern, value, re.IGNORECASE):
+                    return True  # Match found
+            return False  # No matches
+
+        # Apply filters
+        for key, patterns in filters.items():
+            if key == "SUBJECT" and patterns:
+                if not match_any(subject or "", patterns):
+                    return (False, f"SUBJECT failed: {subject}")
+
+            elif key == "FROM" and patterns:
+                if not match_any(efrom or "", patterns):
+                    return (False, f"FROM failed: {efrom}")
+
+            elif key == "TO" and patterns:
+                if not any(
+                    match_any(targets or "", patterns)
+                    for targets in (
+                        eto or "",
+                        ecc or "",
+                        ebc or "",
+                    )
+                ):
+                    # If no direct match, try more robust email extraction
+                    # Analize only the email addresses
+                    emails = re.split(r"[;,]\s*", eto or "")
+                    emails += re.split(r"[;,]\s*", ecc or "")
+                    emails += re.split(r"[;,]\s*", ebc or "")
+
+                    # Stay only with the email and strip < and > if present
+                    email_only = [
+                        e.split()[-1].strip("<>") for e in emails if e
+                    ]
+
+                    # Check if any of the emails match
+                    if not any(match_any(e, patterns) for e in email_only):
+                        return (False, f"TO failed: {eto}")
+
+            elif key == "MESSAGE-ID" and patterns:
+                if not match_any(eid or "", patterns):
+                    return (False, f"MESSAGE-ID failed: {eid}")
+
+            elif key == "BODY_PLAIN" and patterns:
+                if not match_any(body_plain or "", patterns):
+                    return (False, f"BODY_PLAIN failed: {body_plain}")
+
+            elif key == "BODY_HTML" and patterns:
+                if not match_any(body_html or "", patterns):
+                    return (False, f"BODY_HTML failed: {body_html}")
+
+            elif key == "HEADER" and patterns:
+                header_matched = False
+                for header_name, header_patterns in patterns:
+                    header_value = headers.get(header_name, "")
+                    if match_any(header_value, header_patterns):
+                        header_matched = True
+                        break
+                if not header_matched:
+                    return (False, f"HEADER failed: {headers}")
+
+            elif key == "BOUNCE_TYPE" and patterns:
+                if bounce_type not in patterns:
+                    return (False, f"BOUNCE_TYPE failed: {bounce_type}")
+
+            elif key == "BOUNCE_REASON" and patterns:
+                if not bounce_reason or not match_any(bounce_reason, patterns):
+                    return (
+                        False,
+                        f"BOUNCE_REASON failed: {bounce_reason}",
+                    )
+
+            elif key == "TRACKING_ID" and patterns:
+                if patterns and not tracking_id:
+                    return (False, "TRACKING_ID failed: No tracking ID")
+
+        # If all filters passed, allow processing
+        return (True, "All filters passed.")
