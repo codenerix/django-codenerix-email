@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.40) stable; urgency=medium
+
+  * Corrected the way EmailMessage show bounces to improve performance
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 08 Oct 2025 08:06:00 +0200
+
+
 django_codenerix_email (4.0.39) stable; urgency=medium
 
   * Added options to chosse the IMAP selector and to DELETE emails or set them as SEEN for a more granular control

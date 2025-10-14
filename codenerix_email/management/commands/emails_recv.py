@@ -453,7 +453,8 @@ class Command(BaseCommand):
                             if self.verbose:
                                 self.stdout.write(
                                     self.style.SUCCESS(
-                                        f"Deleted email with IMAP ID: {imap_id}"
+                                        "Deleted email with "
+                                        f"IMAP ID: {imap_id}"
                                     )
                                 )
 
@@ -486,6 +487,10 @@ class Command(BaseCommand):
 
                     # Save the received email
                     email_received.save()
+
+                    # Recalculate the email status if linked to a sent email
+                    if email_message:
+                        email_message.recalculate_bounces()
 
                     # Count created or overwritten
                     if overwriting:
@@ -543,7 +548,7 @@ class Command(BaseCommand):
                             )
                         )
                 elif getattr(settings, "IMAP_EMAIL_SEEN", True):
-                    # Mark the message as read otherwise (to avoid reprocessing)
+                    # Mark the message as read otherwise (avoids reprocessing)
                     server.add_flags(imap_id, [b"\\Seen"])
 
         return (created_count, overwrite_count)

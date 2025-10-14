@@ -28,7 +28,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.conf import settings
 from django.http import HttpRequest, Http404
-from django.db.models import Q, Count
+from django.db.models import Q
 
 from codenerix.multiforms import MultiForm  # type: ignore
 from codenerix.views import (  # type: ignore
@@ -40,15 +40,12 @@ from codenerix.views import (  # type: ignore
     GenDelete,
     GenDetail,
     GenDetailModal,
-    SearchFilters,
 )
 from codenerix_email.models import (
     EmailTemplate,
     EmailMessage,
     EmailReceived,
     MODELS,
-    BOUNCE_SOFT,
-    BOUNCE_HARD,
 )
 from codenerix_email.forms import (
     EmailTemplateForm,
@@ -106,7 +103,7 @@ class EmailFollow(View):
             # Return an image of 1x1 pixel
             return HttpResponse(
                 base64.b64decode(
-                    "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+                    "R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="  # noqa: E501
                 ),
                 content_type="image/gif",
             )
@@ -186,90 +183,6 @@ class EmailMessageList(GenList):
         "menu": ["codenerix_email", "emailmessages"],
         "bread": [_("Emails"), _("Email Messages")],
     }
-    annotations = {
-        # "bounces_soft_count": Count(
-        #     "receiveds__pk", filter=Q(receiveds__bounce_type=BOUNCE_SOFT)
-        # ),
-        # "bounces_hard_count": Count(
-        #     "receiveds__pk", filter=Q(receiveds__bounce_type=BOUNCE_HARD)
-        # ),
-        "bounces_total_count": Count(
-            "receiveds__pk", filter=Q(receiveds__bounce_type__isnull=False)
-        ),
-    }
-
-    def __fields__(self, info):
-        fields = []
-        fields.append(("sending", None))
-        fields.append(("error", None))
-        fields.append(("sent", _("Send")))
-        fields.append(("priority", _("Priority")))
-        fields.append(("created", _("Created")))
-        fields.append(("updated", _("Updated")))
-        fields.append(("opened", _("Opened")))
-        # fields.append(("efrom", _("From")))
-        fields.append(("eto", _("To")))
-        fields.append(("subject", _("Subject")))
-        fields.append(("bounces_total_count", _("Bounces")))
-        # fields.append(("bounces_soft_count", _("Soft bounces")))
-        # fields.append(("bounces_hard_count", _("Hard bounces")))
-        fields.append(("retries", _("Retries")))
-        fields.append(("next_retry", _("Next retry")))
-        fields.append(("pk", _("ID")))
-        fields.append(("uuid", _("UUID")))
-        fields.append(("unsubscribe_url", _("Unsubscribe")))
-        fields.append(("content_subtype", _("Content Subtype")))
-        return fields
-
-    def __searchF__(self, info):  # noqa: N802
-        def mailstatus(x):
-            if x == "D":
-                return Q(error=False, sent=True)
-            elif x == "P":
-                return Q(error=False, sent=False, sending=False)
-            elif x == "S":
-                return Q(error=False, sent=False, sending=True)
-            elif x == "E":
-                return Q(error=True)
-            else:
-                return Q()
-
-        mailoptions = [
-            ("D", _("Sent")),  # Sent - Done
-            ("P", _("Pending")),  # Pending - Pending
-            ("S", _("Sending")),  # Sending - Sending
-            ("E", _("Error")),  # Error - Error
-        ]
-
-        return {
-            "sent": (_("Sent"), lambda x: mailstatus(x), mailoptions),
-            "uuid": (_("UUID"), lambda x: Q(uuid__icontains=x), "input"),
-            "priority": (_("Priority"), lambda x: Q(priority=x), "input"),
-            "opened": (
-                _("Opened"),
-                lambda x: ~Q(opened__isnull=x),
-                [(True, _("Yes")), (False, _("No"))],
-            ),
-            # "efrom": (_("From"), lambda x: Q(efrom__icontains=x), "input"),
-            "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
-            "retries": (_("Retries"), lambda x: Q(retries=x), "input"),
-            "pk": (_("ID"), lambda x: Q(pk=x), "input"),
-            "bounces_total_count": (
-                _("Bounces"),
-                SearchFilters.number("bounces_total_count"),
-                "input",
-            ),
-            "bounces_soft_count": (
-                _("Soft bounces"),
-                SearchFilters.number("bounces_soft_count"),
-                "input",
-            ),
-            "bounces_hard_count": (
-                _("Hard bounces"),
-                SearchFilters.number("bounces_hard_count"),
-                "input",
-            ),
-        }
 
 
 class EmailMessageCreate(GenCreate):

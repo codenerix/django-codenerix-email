@@ -114,6 +114,34 @@ class EmailMessage(CodenerixModel):
         _("Unsubscribe URL"), blank=True, null=True
     )
     headers = models.JSONField(_("Headers"), blank=True, null=True)
+    bounces_soft = models.PositiveIntegerField(
+        _("Soft bounces"), blank=False, null=False, default=0
+    )
+    bounces_hard = models.PositiveIntegerField(
+        _("Hard bounces"), blank=False, null=False, default=0
+    )
+    bounces_total = models.PositiveIntegerField(
+        _("Total bounces"), blank=False, null=False, default=0
+    )
+
+    def recalculate_bounces(self):
+        bounces_soft = self.receiveds.filter(bounce_type=BOUNCE_SOFT).count()
+        bounces_hard = self.receiveds.filter(bounce_type=BOUNCE_HARD).count()
+        bounces_total = self.receiveds.filter(
+            bounce_type__isnull=False
+        ).count()
+        changed = False
+        if self.bounces_soft != bounces_soft:
+            self.bounces_soft = bounces_soft
+            changed = True
+        if self.bounces_hard != bounces_hard:
+            self.bounces_hard = bounces_hard
+            changed = True
+        if self.bounces_total != bounces_total:
+            self.bounces_total = bounces_total
+            changed = True
+        if changed:
+            self.save()
 
     def __fields__(self, info):
         fields = []
@@ -127,6 +155,7 @@ class EmailMessage(CodenerixModel):
         # fields.append(("efrom", _("From")))
         fields.append(("eto", _("To")))
         fields.append(("subject", _("Subject")))
+        fields.append(("bounces_total", _("Bounces")))
         fields.append(("retries", _("Retries")))
         fields.append(("next_retry", _("Next retry")))
         fields.append(("pk", _("ID")))
@@ -169,7 +198,6 @@ class EmailMessage(CodenerixModel):
         return {
             "sent": (_("Sent"), lambda x: mailstatus(x), mailoptions),
             "uuid": (_("UUID"), lambda x: Q(uuid__icontains=x), "input"),
-            "priority": (_("Priority"), lambda x: Q(priority=x), "input"),
             "opened": (
                 _("Opened"),
                 lambda x: ~Q(opened__isnull=x),
@@ -177,24 +205,11 @@ class EmailMessage(CodenerixModel):
             ),
             # "efrom": (_("From"), lambda x: Q(efrom__icontains=x), "input"),
             "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
-            "retries": (_("Retries"), lambda x: Q(retries=x), "input"),
             "pk": (_("ID"), lambda x: Q(pk=x), "input"),
         }
 
     def __unicode__(self):
         return "{} ({})".format(self.eto, self.pk)
-
-    @property
-    def bounces_soft(self):
-        return self.receiveds.filter(bounce_type=BOUNCE_SOFT).count()
-
-    @property
-    def bounces_hard(self):
-        return self.receiveds.filter(bounce_type=BOUNCE_HARD).count()
-
-    @property
-    def bounces_total(self):
-        return self.receiveds.filter(bounce_type__isnull=False).count()
 
     def clean(self):
         if not isinstance(self.headers, dict):
