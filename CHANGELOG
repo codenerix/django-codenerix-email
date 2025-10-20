@@ -1,8 +1,15 @@
+django_codenerix_email (4.0.42) stable; urgency=medium
+
+  * Added ignore to prevent decoding errors while processing messages for mixed encodes
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 20 Oct 2025 06:45:00 +0200
+
+
 django_codenerix_email (4.0.41) stable; urgency=medium
 
   * Prevent crashes from invalid charsets in received messages
 
- -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 08 Oct 2025 08:06:00 +0200
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 20 Oct 2025 06:40:00 +0200
 
 
 django_codenerix_email (4.0.40) stable; urgency=medium

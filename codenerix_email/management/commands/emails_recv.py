@@ -353,7 +353,7 @@ class Command(BaseCommand):
                 # Decode subject if it's bytes
                 if isinstance(subject, bytes):
                     charset = self.validate_encoding(encoding)
-                    subject = subject.decode(charset, "ignore")
+                    subject = subject.decode(charset, errors="ignore")
 
                 # Extract other headers
                 efrom = msg.get("From")
@@ -382,27 +382,20 @@ class Command(BaseCommand):
                                 )
                                 body_plain = part.get_payload(
                                     decode=True
-                                ).decode(
-                                    charset,
-                                    "ignore",
-                                )
+                                ).decode(charset, errors="ignore")
                             elif content_type == "text/html" and not body_html:
                                 charset = self.validate_encoding(
                                     part.get_content_charset()
                                 )
                                 body_html = part.get_payload(
                                     decode=True
-                                ).decode(
-                                    charset,
-                                    "ignore",
-                                )
+                                ).decode(charset, errors="ignore")
                     else:
                         charset = self.validate_encoding(
                             msg.get_content_charset()
                         )
                         body_plain = msg.get_payload(decode=True).decode(
-                            charset,
-                            "ignore",
+                            charset, errors="ignore"
                         )
 
                     # Logic to associate replies/bounces with sent emails
@@ -452,7 +445,7 @@ class Command(BaseCommand):
                         charset = self.validate_encoding(encoding)
                         if isinstance(decoded_value, bytes):
                             decoded_value = decoded_value.decode(
-                                charset, "ignore"
+                                charset, errors="ignore"
                             )
                         headers[header] = decoded_value
 
