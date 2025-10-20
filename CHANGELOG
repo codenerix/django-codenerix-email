@@ -1,5 +1,13 @@
 django_codenerix_email (4.0.42) stable; urgency=medium
 
+  * Sometimes encoded headers are smart strings that need str() to avoid the complexity
+    of the object.
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 20 Oct 2025 07:04:00 +0200
+
+
+django_codenerix_email (4.0.42) stable; urgency=medium
+
   * Added ignore to prevent decoding errors while processing messages for mixed encodes
 
  -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 20 Oct 2025 06:45:00 +0200

@@ -591,7 +591,7 @@ class Command(BaseCommand):
         """
 
         # Method 1: Search in main headers (for direct replies)
-        tracking_id = msg.get("X-Codenerix-Tracking-ID", None)
+        tracking_id = str(msg.get("X-Codenerix-Tracking-ID", "")) or None
 
         # Method 2: Search in attached parts (for bounces and forwards)
         if not tracking_id:
@@ -614,8 +614,13 @@ class Command(BaseCommand):
                         ):
                             original_msg = original_msg_payload[0]
                             if isinstance(original_msg, Message):
-                                tracking_id = original_msg.get(
-                                    "X-Codenerix-Tracking-ID"
+                                tracking_id = (
+                                    str(
+                                        original_msg.get(
+                                            "X-Codenerix-Tracking-ID", ""
+                                        )
+                                    )
+                                    or None
                                 )
 
                     elif content_type == "text/rfc822-headers":
@@ -632,8 +637,13 @@ class Command(BaseCommand):
 
                             # Parse headers text into a Message object
                             headers_msg = HeaderParser().parsestr(headers_text)
-                            tracking_id = headers_msg.get(
-                                "X-Codenerix-Tracking-ID"
+                            tracking_id = (
+                                str(
+                                    headers_msg.get(
+                                        "X-Codenerix-Tracking-ID", ""
+                                    )
+                                )
+                                or None
                             )
 
             # Method 3: Search in the body text (fallback)
@@ -716,8 +726,10 @@ class Command(BaseCommand):
                         status_headers = payload[0]
                         if isinstance(status_headers, Message):
                             # Extract Action and Status headers
-                            action = status_headers.get("Action", "").lower()
-                            status_code = status_headers.get("Status", "")
+                            action = str(
+                                status_headers.get("Action", "")
+                            ).lower()
+                            status_code = str(status_headers.get("Status", ""))
 
                             # Check if action indicates failure
                             if action == "failed":
@@ -747,13 +759,13 @@ class Command(BaseCommand):
 
             else:
                 # Check for Auto-Submitted header
-                if msg.get("Auto-Submitted", "").lower() in (
+                if str(msg.get("Auto-Submitted", "")).lower() in (
                     "auto-replied",
                     "auto-generated",
                 ):
                     # It could be a bounce, but also an "Out of Office",
                     # so we combine it with a keyword search.
-                    subject = msg.get("Subject", "").lower()
+                    subject = str(msg.get("Subject", "")).lower()
                     bounce_keywords = [
                         "undeliverable",
                         "delivery failed",
@@ -770,8 +782,8 @@ class Command(BaseCommand):
         if not bounce_type:
             # We look for common bounce keywords in the From or Subject headers
             # We avoid false positives by requiring specific keywords.
-            from_header = msg.get("From", "").lower()
-            subject_header = msg.get("Subject", "").lower()
+            from_header = str(msg.get("From", "")).lower()
+            subject_header = str(msg.get("Subject", "")).lower()
 
             if "mailer-daemon@" in from_header or "postmaster@" in from_header:
                 # Common bounce sender addresses
