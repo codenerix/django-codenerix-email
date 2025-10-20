@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.41) stable; urgency=medium
+
+  * Prevent crashes from invalid charsets in received messages
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 08 Oct 2025 08:06:00 +0200
+
+
 django_codenerix_email (4.0.40) stable; urgency=medium
 
   * Corrected the way EmailMessage show bounces to improve performance

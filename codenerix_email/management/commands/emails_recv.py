@@ -1,4 +1,5 @@
 import re
+import codecs
 from textwrap import dedent
 from argparse import RawTextHelpFormatter
 
@@ -143,6 +144,24 @@ class Command(BaseCommand):
         parser.add_argument(
             "--rewrite", action="store_true", help="Rewrite existing"
         )
+
+    def validate_encoding(self, encoding: str | None) -> str:
+        """
+        Validates and returns a safe encoding name.
+        """
+        # If an encoding is specified, verify it's valid
+        if encoding:
+            try:
+                # Attempt to look up the encoding to see if it's known
+                codecs.lookup(encoding)
+            except LookupError:
+                # If the lookup fails, the encoding is unknown
+                # Fall back to a safe default like 'latin-1'
+                encoding = "latin-1"
+        else:
+            # If no encoding is specified, use a default
+            encoding = "utf-8"
+        return encoding
 
     def handle(self, *args, **options):
         # Get configuration
@@ -328,10 +347,15 @@ class Command(BaseCommand):
                 # Parse the email
                 msg = message_from_bytes(raw_email)
 
-                # Extract subject, efrom, eto & eid
+                # Extract subject
                 subject, encoding = decode_header(msg["Subject"])[0]
+
+                # Decode subject if it's bytes
                 if isinstance(subject, bytes):
-                    subject = subject.decode(encoding or "utf-8")
+                    charset = self.validate_encoding(encoding)
+                    subject = subject.decode(charset, "ignore")
+
+                # Extract other headers
                 efrom = msg.get("From")
                 eto = msg.get("To")
                 eid = msg.get("Message-ID")
@@ -353,22 +377,31 @@ class Command(BaseCommand):
                         for part in msg.walk():
                             content_type = part.get_content_type()
                             if content_type == "text/plain" and not body_plain:
+                                charset = self.validate_encoding(
+                                    part.get_content_charset()
+                                )
                                 body_plain = part.get_payload(
                                     decode=True
                                 ).decode(
-                                    part.get_content_charset() or "utf-8",
+                                    charset,
                                     "ignore",
                                 )
                             elif content_type == "text/html" and not body_html:
+                                charset = self.validate_encoding(
+                                    part.get_content_charset()
+                                )
                                 body_html = part.get_payload(
                                     decode=True
                                 ).decode(
-                                    part.get_content_charset() or "utf-8",
+                                    charset,
                                     "ignore",
                                 )
                     else:
+                        charset = self.validate_encoding(
+                            msg.get_content_charset()
+                        )
                         body_plain = msg.get_payload(decode=True).decode(
-                            msg.get_content_charset() or "utf-8",
+                            charset,
                             "ignore",
                         )
 
@@ -416,9 +449,10 @@ class Command(BaseCommand):
                     headers = {}
                     for header, value in msg.items():
                         decoded_value, encoding = decode_header(value)[0]
+                        charset = self.validate_encoding(encoding)
                         if isinstance(decoded_value, bytes):
                             decoded_value = decoded_value.decode(
-                                encoding or "utf-8", "ignore"
+                                charset, "ignore"
                             )
                         headers[header] = decoded_value
 
@@ -596,7 +630,9 @@ class Command(BaseCommand):
                         headers_payload = part.get_payload(decode=True)
                         if isinstance(headers_payload, bytes):
                             # Decode using the specified charset
-                            charset = part.get_content_charset() or "utf-8"
+                            charset = self.validate_encoding(
+                                part.get_content_charset()
+                            )
                             headers_text = headers_payload.decode(
                                 charset, errors="ignore"
                             )
@@ -620,7 +656,9 @@ class Command(BaseCommand):
                             payload = part.get_payload(decode=True)
                             if isinstance(payload, bytes):
                                 # Decode using the specified charset
-                                charset = part.get_content_charset() or "utf-8"
+                                charset = self.validate_encoding(
+                                    part.get_content_charset()
+                                )
                                 body_text += payload.decode(
                                     charset, errors="ignore"
                                 )
@@ -631,7 +669,9 @@ class Command(BaseCommand):
                         payload = msg.get_payload(decode=True)
                         if isinstance(payload, bytes):
                             # Decode using the specified charset
-                            charset = msg.get_content_charset() or "utf-8"
+                            charset = self.validate_encoding(
+                                msg.get_content_charset()
+                            )
                             body_text = payload.decode(
                                 charset, errors="ignore"
                             )
