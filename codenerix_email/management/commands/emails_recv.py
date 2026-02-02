@@ -31,6 +31,66 @@ from imapclient import IMAPClient  # noqa: E402
 from imapclient.exceptions import LoginError  # noqa: E402
 
 
+class IMAPClientFile:
+    """
+    A mock IMAPClient that reads a single email from a file.
+    Used for testing purposes.
+    """
+
+    def __init__(self, file_path, *args, **kwargs):
+        self.file_path = file_path
+        self.selected_folder = None
+
+    def login(self, user, password):
+        # No-op for file-based client
+        pass
+
+    def select_folder(self, folder, readonly=False):
+        self.selected_folder = folder
+
+    def search(self, criteria):
+        # Always return a single fake ID
+        return [1]
+
+    def fetch(self, messages_ids, data_items):
+        # Read the email from the file
+        with open(self.file_path, "rb") as f:
+            raw_email = f.read()
+
+        # Return a single message with the raw email and current date
+        from datetime import datetime
+
+        return {
+            1: {
+                b"BODY[]": raw_email,
+                b"INTERNALDATE": datetime.now(),
+            }
+        }
+
+    def add_flags(self, imap_id, flags):
+        # No-op for file-based client
+        pass
+
+    def delete_messages(self, imap_id):
+        # No-op for file-based client
+        pass
+
+    def expunge(self):
+        # No-op for file-based client
+        pass
+
+    def logout(self):
+        # No-op for file-based client
+        pass
+
+    @classmethod
+    def factory(cls, file_path):
+        def _factory(*args, **kwargs):
+            return IMAPClientFile(file_path, *args, **kwargs)
+
+        return _factory
+
+
 class Command(BaseCommand):
     help = "Fetches new emails from the configured IMAP account."
 
@@ -144,6 +204,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "--rewrite", action="store_true", help="Rewrite existing"
         )
+        parser.add_argument(
+            "--file", type=str, help="Path to a file containing raw email data"
+        )
 
     def validate_encoding(self, encoding: str | None) -> str:
         """
@@ -172,6 +235,7 @@ class Command(BaseCommand):
         self.tracking_id = options.get("tracking_id")
         self.rewrite = options.get("rewrite", False)
         self.process_all = options.get("all", False)
+        self.file_path = options.get("file")
 
         # Show header
         if self.verbose:
@@ -187,6 +251,12 @@ class Command(BaseCommand):
         ssl = getattr(settings, "IMAP_EMAIL_SSL", True)
         folder = getattr(settings, "IMAP_EMAIL_INBOX_FOLDER", "INBOX")
 
+        # Check if processing from file
+        if self.file_path:
+            imapcls = IMAPClientFile.factory(self.file_path)
+        else:
+            imapcls = IMAPClient
+
         # Verify that IMAP settings are configured
         if host is not None and port:
             # Validate configuration
@@ -201,7 +271,7 @@ class Command(BaseCommand):
 
             try:
                 # Connect to the IMAP server
-                server = IMAPClient(host, port=port, ssl=ssl)
+                server = imapcls(host, port=port, ssl=ssl)
             except Exception as e:
                 raise CommandError(
                     f"Failed to connect to IMAP server ("
@@ -896,6 +966,13 @@ class Command(BaseCommand):
                     return (False, f"HEADER failed: {headers}")
 
             elif key == "BOUNCE_TYPE" and patterns:
+                # Convert bounce_type to string for matching
+                if bounce_type:
+                    if bounce_type == BOUNCE_HARD:
+                        bounce_type = "hard"
+                    elif bounce_type == BOUNCE_SOFT:
+                        bounce_type = "soft"
+
                 if bounce_type not in patterns:
                     return (False, f"BOUNCE_TYPE failed: {bounce_type}")
 

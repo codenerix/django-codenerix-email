@@ -1,3 +1,10 @@
+django_codenerix_email (4.0.43) stable; urgency=medium
+
+  * Correction to BOUNCE TYPE string detection
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Mon, 02 Feb 2026 10:12:00 +0200
+
+
 django_codenerix_email (4.0.42) stable; urgency=medium
 
   * Sometimes encoded headers are smart strings that need str() to avoid the complexity
