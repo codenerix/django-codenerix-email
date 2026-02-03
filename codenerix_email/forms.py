@@ -71,22 +71,40 @@ class EmailTemplateForm(GenModelForm):
 class EmailMessageForm(GenModelForm):
     class Meta:
         model = EmailMessage
-        exclude = ["sending", "log"]
+        exclude = [
+            "sending",
+            "log",
+            "opened",
+            "unsubscribe_url",
+            "bounces_total",
+            "bounces_soft",
+            "bounces_hard",
+        ]
 
     def __groups__(self):
         return [
             (
-                _("Details"),
+                _("Basics"),
+                8,
+                ["efrom", 6],
+                ["eto", 6],
+                ["subject", 12],
+            ),
+            (
+                _("Control"),
+                4,
+                ["priority", 4],
+                ["sent", 4],
+                ["error", 4],
+                ["retries", 4],
+                ["content_subtype", 8],
+            ),
+            (
+                _("Contents"),
                 12,
-                ["efrom", 2],
-                ["eto", 2],
-                ["subject", 4],
-                ["priority", 1],
-                ["sent", 1],
-                ["error", 1],
-                ["retries", 1],
+                ["headers", 12],
                 ["body", 12],
-            )
+            ),
         ]
 
     @staticmethod

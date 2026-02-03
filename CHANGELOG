@@ -1,11 +1,18 @@
-django_codenerix_email (4.0.45) stable; urgency=mlow
+django_codenerix_email (4.0.46) stable; urgency=low
+
+  * EmailMessage form reordered
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 03 Feb 2026 12:20:00 +0200
+
+
+django_codenerix_email (4.0.45) stable; urgency=low
 
   * Corrected message when using emails_send --all
 
  -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 03 Feb 2026 12:03:00 +0200
 
 
-django_codenerix_email (4.0.44) stable; urgency=mlow
+django_codenerix_email (4.0.44) stable; urgency=low
 
   * Improved emails_recv to support --file argument to read an email from a file
 
