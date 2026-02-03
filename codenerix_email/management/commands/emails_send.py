@@ -114,6 +114,11 @@ class Command(BaseCommand, Debugger):
                     f"queue of {bucket_size} emails",
                     color="cyan",
                 )
+            elif doall:
+                self.debug(
+                    "Starting to send ALL emails in the queue",
+                    color="blue",
+                )
             else:
                 self.debug(
                     "Starting a queue of {} emails".format(bucket_size),

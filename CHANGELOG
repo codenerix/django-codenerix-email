@@ -1,3 +1,17 @@
+django_codenerix_email (4.0.45) stable; urgency=mlow
+
+  * Corrected message when using emails_send --all
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 03 Feb 2026 12:03:00 +0200
+
+
+django_codenerix_email (4.0.44) stable; urgency=mlow
+
+  * Improved emails_recv to support --file argument to read an email from a file
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Tue, 02 Feb 2026 10:16:00 +0200
+
+
 django_codenerix_email (4.0.43) stable; urgency=medium
 
   * Correction to BOUNCE TYPE string detection
