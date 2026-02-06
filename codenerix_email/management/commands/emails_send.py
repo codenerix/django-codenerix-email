@@ -92,6 +92,14 @@ class Command(BaseCommand, Debugger):
             default=False,
             help="Send all, do not do on buckets",
         )
+        # Named (optional) arguments
+        parser.add_argument(
+            "--retry-all",
+            action="store_true",
+            dest="retry_all",
+            default=False,
+            help="Retry all, do not wait the retry time and do not check retries",
+        )
 
     def handle(self, *args, **options):
         # Get user configuration
@@ -101,6 +109,7 @@ class Command(BaseCommand, Debugger):
         verbose = bool(options.get("verbose", False))
         sendnow = bool(options.get("now", False))
         doall = bool(options.get("all", False))
+        retry_all = bool(options.get("retry_all", False))
 
         # Autoconfigure Debugger
         self.set_name("CODENERIX-EMAIL")
@@ -121,13 +130,16 @@ class Command(BaseCommand, Debugger):
                 )
             else:
                 self.debug(
-                    "Starting a queue of {} emails".format(bucket_size),
+                    f"Starting a queue of {bucket_size} emails",
                     color="blue",
                 )
 
         # In if requested set sending status for all the list to False
         if clear:
             EmailMessage.objects.filter(sending=True).update(sending=False)
+
+        # System retries
+        max_retries = getattr(settings, "CLIENT_EMAIL_RETRIES", 10)
 
         # Get a bunch of emails in the queue
         connection = None
@@ -142,10 +154,21 @@ class Command(BaseCommand, Debugger):
                 error=False,
             )
 
+            # If we do not have to retry all we have to check the retries
+            if not retry_all:
+                emails = emails.filter(retries__lt=max_retries)
+
             # If we do not have to send now we have to wait for the next retry
             if not sendnow:
                 emails = emails.filter(
                     next_retry__lte=timezone.now(),
+                )
+
+            if verbose and emails:
+                self.debug(
+                    f"There are {emails.count()} emails "
+                    "to be sent in the queue",
+                    color="cyan",
                 )
 
             # Order emails by priority and next retry
@@ -157,6 +180,14 @@ class Command(BaseCommand, Debugger):
 
             # Check if there are emails to process
             if emails:
+
+                # Show the number of emails to be sent in this batch
+                if verbose:
+                    self.debug(
+                        f"Sending {emails.count()} emails in this batch",
+                        color="cyan",
+                    )
+
                 # Convert to list
                 list_emails = [x.pk for x in emails]
 
@@ -169,7 +200,7 @@ class Command(BaseCommand, Debugger):
                 for email in emails:
                     if verbose:
                         self.debug(
-                            "Sending to {}".format(email.eto),
+                            f"Sending to {email.eto}",
                             color="white",
                             tail=False,
                         )
@@ -190,7 +221,7 @@ class Command(BaseCommand, Debugger):
                         email.send(connection, debug=False)
                     except Exception as e:
                         email.sending = False
-                        error = "Exception: {}\n".format(e)
+                        error = f"Exception: {e}\n"
                         if email.log:
                             email.log += error
                         else:
@@ -208,12 +239,8 @@ class Command(BaseCommand, Debugger):
                                 tail=False,
                             )
                             self.debug(
-                                " ({} retries left)".format(
-                                    getattr(
-                                        settings, "CLIENT_EMAIL_RETRIES", 10
-                                    )
-                                    - email.retries
-                                ),
+                                f" ({max_retries - email.retries} "
+                                "retries left)",
                                 color="cyan",
                                 head=False,
                             )

@@ -13,10 +13,13 @@
     <span title="{{row.opened}}" codenerix-html-compile="row.opened|codenerix:'bool'"><span>
 </td>
 <td>{{row.eto|codenerix}}</td>
-<td><nobr>{{row.subject|codenerix}}</nobr></td>
+<td><nobr codenerix-html-compile="row.subject|codenerix:'shorttext:20'"></nobr></td>
 <td class="text-nowrap">{{row.bounces_total|codenerix}}</td>
 <td><center>{{row.retries|codenerix}}</center></td>
-<td class="text-nowrap">{{row.next_retry|codenerix}}</td>
+<td class="text-nowrap">
+    <span show="row.sent" title="{{row.next_retry|codenerix}}">-</span>
+    <span hide="row.sent">{{row.next_retry|codenerix}}</span>
+</td>
 <td><center>{{row.pk|codenerix}}</center></td>
 <td ng-click="$event.stopPropagation();" align="center">
     <nobr><i title="{{row.uuid}}" codenerix-html-compile="row.uuid|codenerix:'copytoclipboard:UUID:UUID copiado al portapapales...'"></i></nobr>

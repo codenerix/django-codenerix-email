@@ -605,7 +605,8 @@ class EmailReceived(CodenerixModel):
         fields.append(("efrom", _("From")))
         fields.append(("eto", _("To")))
         fields.append(("subject", _("Subject")))
-        fields.append(("email__uuid", _("Related email")))
+        fields.append(("email__eto", _("Related email")))
+        fields.append(("email__uuid", None))
         fields.append(("email__pk", None))
         fields.append(("imap_id", _("IMAP ID")))
         return fields
@@ -620,6 +621,11 @@ class EmailReceived(CodenerixModel):
         return {
             "efrom": (_("From"), lambda x: Q(efrom__icontains=x), "input"),
             "eto": (_("To"), lambda x: Q(eto__icontains=x), "input"),
+            "email__eto": (
+                _("Related To"),
+                lambda x: Q(email__eto__icontains=x),
+                "input",
+            ),
             "email__uuid": (
                 _("Related email"),
                 lambda x: Q(email__uuid__icontains=x),
