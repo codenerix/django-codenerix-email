@@ -149,12 +149,12 @@ class Command(BaseCommand):
                     "FROM": [r".*"],
                     "MESSAGE-ID": [r".*"],
                     "TO": [
-                        r"^bounce@becas\.com",
-                        r"^bounces@becas\.com",
-                        r"^no-reply@becas\.com",
-                        r"^hola@becas\.com",
-                        r"^tuasesor@becas\.com",
-                        r"^[a-zA-Z0-9._%+-]+@becas\.com",  # *@becas.com
+                        r"^bounce@codenerix\.com",
+                        r"^bounces@codenerix\.com",
+                        r"^no-reply@codenerix\.com",
+                        r"^hola@codenerix\.com",
+                        r"^tuasesor@codenerix\.com",
+                        r"^[a-zA-Z0-9._%+-]+@codenerix\.com",  # *@codenerix.com
                     ],
                     "BODY_PLAIN": [r".*"],
                     "BODY_HTML": [r".*"],
