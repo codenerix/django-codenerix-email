@@ -394,7 +394,11 @@ class EmailMessage(CodenerixModel):
                 logger.warning("Not connected, connecting...")
             connection = self.connect(legacy)
 
-        if self.eto:
+        # Guards, nobody should try to send in this conditions
+        # 1: No destination
+        # 2: Already sent
+        # 3: Already in fatal error
+        if self.eto and not self.error and not self.sent:
             # Manually open the connection
             error = None
             try:
@@ -454,9 +458,9 @@ class EmailMessage(CodenerixModel):
                     with open(at.path) as f:
                         email.attach(at.filename, f.read(), at.mime)
 
-                # send list emails
+                # Send list emails if retries and not sent yet and not error
                 retries = 1
-                while retries + 1:
+                while retries and not self.sent and not self.error:
                     error = None
                     try:
                         if connection.send_messages([email]):
@@ -485,8 +489,8 @@ class EmailMessage(CodenerixModel):
                             smtplib.SMTPAuthenticationError,
                             OSError,
                             TimeoutError,
-                        ) as e:
-                            error = f"{self.eto}: SMTPServerReconnect: {e}\n"
+                        ) as e2:
+                            error = f"{self.eto}: SMTPServerReconnect: {e2}\n"
                             if not silent or debug:
                                 logger.warning(error)
                             if self.log is None:
@@ -500,30 +504,35 @@ class EmailMessage(CodenerixModel):
                             self.log = ""
                         self.log += f"{error}\n"
                     finally:
-                        # One chance less
-                        retries -= 1
-                        # Check if this is the last try
-                        if not retries:
-                            # We will not retry anymore (fow now)
-                            self.sending = False
-                            # We make lower this email's priority
-                            self.priority += 1
-                            # Set we just made a new retry
-                            self.retries += 1
-                            self.next_retry = (
-                                timezone.now()
-                                + timezone.timedelta(
-                                    seconds=getattr(
-                                        settings,
-                                        "CLIENT_EMAIL_RETRIES_WAIT",
-                                        5400,
+
+                        # Retry if error
+                        if error:
+
+                            # One chance less
+                            retries -= 1
+                            # Check if this is the last try
+                            if not retries:
+                                # We will not retry anymore (fow now)
+                                self.sending = False
+                                # We make lower this email's priority
+                                self.priority += 1
+                                # Set we just made a new retry
+                                self.retries += 1
+                                self.next_retry = (
+                                    timezone.now()
+                                    + timezone.timedelta(
+                                        seconds=getattr(
+                                            settings,
+                                            "CLIENT_EMAIL_RETRIES_WAIT",
+                                            5400,
+                                        )
                                     )
-                                )
-                            )  # retry every 1.5h
-                            if self.retries >= getattr(
-                                settings, "CLIENT_EMAIL_RETRIES", 10
-                            ):  # 10 retries * 1.5h = 15h
-                                self.error = True
+                                )  # retry every 1.5h
+                                if self.retries >= getattr(
+                                    settings, "CLIENT_EMAIL_RETRIES", 10
+                                ):  # 10 retries * 1.5h = 15h
+                                    self.error = True
+
                         # Save the email
                         self.save()
                         # Disconnect

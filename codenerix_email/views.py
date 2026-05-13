@@ -24,6 +24,7 @@ from typing import Optional, Tuple, List, Dict
 from django.http import HttpResponse
 from django.views.generic import View
 
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.conf import settings
@@ -95,7 +96,10 @@ class EmailFollow(View):
 
         if uid:
             # Get email message or return 404
-            email_message = get_object_or_404(EmailMessage, uuid=uid)
+            try:
+                email_message = get_object_or_404(EmailMessage, uuid=uid)
+            except ValidationError:
+                raise Http404
 
             # Set email message as opened
             email_message.set_opened()

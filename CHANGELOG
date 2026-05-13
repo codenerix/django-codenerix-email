@@ -1,3 +1,16 @@
+django_codenerix_email (4.0.51) stable; urgency=low
+
+  * Retry system repaired
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 13 Mar 2026 12:44:00 +0200
+
+django_codenerix_email (4.0.50) stable; urgency=low
+
+  * Guards added to send
+  * EmailFollow hidden pixel repaired
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 13 Mar 2026 12:26:00 +0200
+
 django_codenerix_email (4.0.49) stable; urgency=low
 
   * Missing migration added
