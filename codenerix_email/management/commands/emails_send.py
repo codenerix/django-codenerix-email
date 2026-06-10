@@ -174,9 +174,17 @@ class Command(BaseCommand, Debugger):
             # Order emails by priority and next retry
             emails = emails.order_by("priority", "next_retry")
 
-            # Send in buckets if we are not doing them all
+            # Materialize the bucket in a single query so the rows we mark as
+            # `sending` below and the rows we iterate to actually send are
+            # guaranteed to be the same set. With a lazy QuerySet this only
+            # holds because the `if emails:` guard evaluates and caches it;
+            # switching that guard to the common `.exists()` optimization
+            # would otherwise re-run the query after the update (the filter
+            # requires sending=False) and leave rows stuck in sending=True.
             if not doall:
-                emails = emails[0 : bucket_size + 1]
+                emails = list(emails[0:bucket_size])
+            else:
+                emails = list(emails)
 
             # Check if there are emails to process
             if emails:
@@ -184,7 +192,7 @@ class Command(BaseCommand, Debugger):
                 # Show the number of emails to be sent in this batch
                 if verbose:
                     self.debug(
-                        f"Sending {emails.count()} emails in this batch",
+                        f"Sending {len(emails)} emails in this batch",
                         color="cyan",
                     )
 

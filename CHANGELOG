@@ -1,3 +1,11 @@
+django_codenerix_email (4.0.52) stable; urgency=low
+
+  * Emails Send command improved
+  * Legacy commands rewrotten in a more idiomatic way
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Wed, 10 May 2026 07:45:00 +0200
+
+
 django_codenerix_email (4.0.51) stable; urgency=low
 
   * Retry system repaired

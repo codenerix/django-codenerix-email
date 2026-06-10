@@ -1,11 +1,9 @@
-import sys
+from .emails_send import Command as RealCommand
 
-if not sys.argv[0].startswith("email"):
-    import logging
 
-    logger = logging.getLogger("codenerix")
-    logger.warning(
-        "WARNING: 'send_emails' is DEPRECATED, switch to 'emails_send' instead"
-    )
-
-from .emails_send import *  # type: ignore # noqa
+class Command(RealCommand):
+    def handle(self, *args, **options):
+        self.stderr.write(
+            "WARNING: 'send_emails' is DEPRECATED, switch to 'emails_send'"
+        )
+        return super().handle(*args, **options)
