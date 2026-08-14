@@ -751,9 +751,12 @@ class Command(BaseCommand):
 
                 # If we have body text, search for the header using regex
                 if body_text:
-                    # We use a regex to find the header in the text
+                    # get_headers() writes ``self.uuid.hex``, which is 32
+                    # characters with no dashes. The previous ``{36}`` only
+                    # matched the dashed form, so this fallback could never
+                    # find anything. Accept both spellings.
                     match = re.search(
-                        r"X-Codenerix-Tracking-ID:\s*([a-fA-F0-9\-]{36})",
+                        r"X-Codenerix-Tracking-ID:\s*([a-fA-F0-9\-]{32,36})",
                         body_text,
                     )
 
@@ -789,42 +792,75 @@ class Command(BaseCommand):
             for part in msg.walk():
                 # We look for the delivery-status part
                 if part.get_content_type() == "message/delivery-status":
-                    # The payload is a list of headers
+                    # The payload is a list of field groups. Per RFC 3464 the
+                    # FIRST group holds the per-message fields (Reporting-MTA,
+                    # Arrival-Date...) and the following ones hold the
+                    # per-recipient fields (Final-Recipient, Action, Status,
+                    # Diagnostic-Code). Reading only payload[0] therefore never
+                    # finds Action nor Status, which silently disabled this
+                    # whole method and pushed every bounce down to the keyword
+                    # heuristic in Method 3.
                     payload = part.get_payload()
-                    if payload and isinstance(payload, list):
-                        # The first part contains the status headers
-                        status_headers = payload[0]
-                        if isinstance(status_headers, Message):
-                            # Extract Action and Status headers
-                            action = str(
-                                status_headers.get("Action", "")
-                            ).lower()
-                            status_code = str(status_headers.get("Status", ""))
+                    if not (payload and isinstance(payload, list)):
+                        continue
 
-                            # Check if action indicates failure
-                            if action == "failed":
-                                # Determine Hard/Soft by SMTP code (RFC3463)
-                                if status_code.startswith("5."):
-                                    # 5.x.x: permanent failure (hard)
-                                    bounce_type = BOUNCE_HARD
-                                    bounce_reason = status_code
-                                    break
-                                elif status_code.startswith("4."):
-                                    # 4.x.x: temporary failure (soft)
-                                    bounce_type = BOUNCE_SOFT
-                                    bounce_reason = status_code
-                                    break
-                                else:
-                                    # Unknown status, assume hard bounce
-                                    bounce_type = BOUNCE_HARD
-                                    bounce_reason = status_code or "Unknown"
-                                    break
+                    for status_headers in payload:
+                        if not isinstance(status_headers, Message):
+                            continue
+
+                        # Extract Action and Status headers
+                        action = str(
+                            status_headers.get("Action", "")
+                        ).lower()
+                        status_code = str(status_headers.get("Status", ""))
+
+                        # Check if action indicates failure
+                        if action != "failed":
+                            continue
+
+                        # The Diagnostic-Code carries the reply the remote
+                        # server actually gave us, which is what makes a
+                        # bounce diagnosable
+                        diagnostic = " ".join(
+                            str(
+                                status_headers.get("Diagnostic-Code", "")
+                            ).split()
+                        )
+                        reason = (
+                            f"{status_code} {diagnostic}".strip()
+                            or "Unknown"
+                        )
+
+                        # Determine Hard/Soft by SMTP code (RFC3463)
+                        if status_code.startswith("5."):
+                            # 5.x.x: permanent failure (hard)
+                            bounce_type = BOUNCE_HARD
+                        elif status_code.startswith("4."):
+                            # 4.x.x: temporary failure (soft)
+                            bounce_type = BOUNCE_SOFT
+                        else:
+                            # Unknown status, assume hard bounce
+                            bounce_type = BOUNCE_HARD
+                        bounce_reason = reason
+                        break
+
+                    if bounce_type:
+                        break
+
+        # Methods 2 and 3 below are heuristics: they detect THAT something is
+        # a bounce but never learn WHY, because no SMTP status code is
+        # available. Returning BOUNCE_HARD from a guess is dangerous: a full
+        # mailbox or a greylisting (4.x.x, temporary) would be counted against
+        # BOUNCE_HARD_LIMIT and unsubscribe a perfectly valid address. When in
+        # doubt we classify as soft, which delays purging a genuinely dead
+        # address but never drops a good one.
 
         # Method 2: Some mail servers include headers indicating a bounce
         if not bounce_type:
             if msg.get("X-Failed-Recipients"):
-                # Presence of this header usually indicates a hard bounce
-                bounce_type = BOUNCE_HARD
+                # A bounce, but with no code telling us whether it is
+                # permanent: treat as soft (see note above)
+                bounce_type = BOUNCE_SOFT
                 bounce_reason = "Unknown (X-Failed-Recipients)"
 
             else:
@@ -844,8 +880,7 @@ class Command(BaseCommand):
 
                     # If we find bounce keywords in the subject
                     if any(keyword in subject for keyword in bounce_keywords):
-                        # Assume is a hard bounce
-                        bounce_type = BOUNCE_HARD
+                        bounce_type = BOUNCE_SOFT
                         bounce_reason = "Unknown (Auto-Submitted + Keyword)"
 
         # Method 3: keyword search (less reliable)
@@ -856,8 +891,9 @@ class Command(BaseCommand):
             subject_header = str(msg.get("Subject", "")).lower()
 
             if "mailer-daemon@" in from_header or "postmaster@" in from_header:
-                # Common bounce sender addresses
-                bounce_type = BOUNCE_HARD
+                # Common bounce sender addresses. EVERY bounce carries this,
+                # soft ones included, so this cannot imply a hard bounce.
+                bounce_type = BOUNCE_SOFT
                 bounce_reason = "Unknown (From Keyword)"
             else:
                 # Check subject for common bounce keywords
@@ -869,7 +905,7 @@ class Command(BaseCommand):
                 if any(
                     keyword in subject_header for keyword in bounce_keywords
                 ):
-                    bounce_type = BOUNCE_HARD
+                    bounce_type = BOUNCE_SOFT
                     bounce_reason = "Unknown (Subject Keyword)"
 
         return (bounce_type, bounce_reason)

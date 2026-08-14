@@ -24,6 +24,7 @@ import smtplib
 import logging
 from uuid import uuid4
 from typing import Optional
+from email.utils import parseaddr
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -57,6 +58,16 @@ BOUNCE_TYPES = (
 )
 
 logger = logging.getLogger("CodenerixEmail:EmailMessage")
+
+
+def email_domain(address):
+    """Return the domain of an address, tolerating a display name.
+
+    ``"Becas.com <news@example.com>"`` -> ``"example.com"``. A plain
+    ``split("@")[-1]`` would return ``"example.com>"`` and produce a
+    malformed Message-ID.
+    """
+    return parseaddr(address or "")[1].split("@")[-1]
 
 
 def ensure_header(headers, key, value, headers_keys=None):
@@ -215,6 +226,22 @@ class EmailMessage(CodenerixModel):
         if not isinstance(self.headers, dict):
             raise ValidationError(_("HEADERS must be a Dictionary"))
 
+    def save(self, *args, **kwargs):
+        # Callers that set `eto` but forget `efrom` used to go through
+        # silently and the message left with an empty From header, which
+        # violates RFC 5322 and gets rejected or filtered by most receivers
+        # with no trace anywhere. Fill in a sane default so the message is
+        # deliverable, and warn so the calling code gets fixed instead of the
+        # problem staying hidden.
+        if not self.efrom:
+            self.efrom = settings.DEFAULT_FROM_EMAIL
+            logger.warning(
+                "EmailMessage saved without efrom, falling back to "
+                f"DEFAULT_FROM_EMAIL ({self.efrom}) for eto={self.eto!r} "
+                f"subject={self.subject!r}",
+            )
+        return super().save(*args, **kwargs)
+
     def set_opened(self):
         if not self.opened:
             self.opened = timezone.now()
@@ -245,7 +272,15 @@ class EmailMessage(CodenerixModel):
         # Prepare message ID info
         if "Message-ID".lower() not in headers_keys:
             ecid = self.uuid.hex
-            edomain = settings.EMAIL_FROM.split("@")[-1]
+            # A raw ``split("@")[-1]`` on a "Name <user@host>" setting keeps
+            # the trailing ">" and produces "<id-ts@host>>", a Message-ID that
+            # violates RFC 5322 and that bulk senders are required to get
+            # right. parseaddr() extracts the bare address whatever the
+            # format, and DEFAULT_FROM_EMAIL covers EMAIL_FROM being unset.
+            edomain = email_domain(
+                getattr(settings, "EMAIL_FROM", None)
+                or settings.DEFAULT_FROM_EMAIL,
+            )
             ets = int(timezone.now().timestamp())
             ensure_header(
                 headers,

@@ -1,3 +1,20 @@
+django_codenerix_email (4.0.53) stable; urgency=low
+
+  * Bounce DSN parser reads per-recipient fields (RFC 3464), not only the
+    per-message block, so Action/Status were never found
+  * Bounce reason now includes the SMTP Diagnostic-Code
+  * Heuristic bounce detection no longer assumes hard bounce when no SMTP
+    code is available, it reports soft instead
+  * Tracking ID lookup in body text accepts the 32 char hex form written by
+    get_headers(), it only matched the dashed form before
+  * Message-ID domain extracted with parseaddr(), a display name in
+    EMAIL_FROM produced a malformed Message-ID
+  * EMAIL_FROM falls back to DEFAULT_FROM_EMAIL when undefined
+  * EmailMessage.save() fills in efrom when empty and warns about it
+
+ -- Juanmi Taboada <juanmi@juanmitaboada.com>  Fri, 14 Aug 2026 13:30:00 +0200
+
+
 django_codenerix_email (4.0.52) stable; urgency=low
 
   * Emails Send command improved

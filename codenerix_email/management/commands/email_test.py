@@ -25,7 +25,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from codenerix_lib.debugger import Debugger
-from codenerix_email.models import EmailMessage, EmailTemplate
+from codenerix_email.models import EmailMessage, EmailTemplate, email_domain
 from codenerix_email import __version__
 from django.core.management import CommandError
 
@@ -130,7 +130,10 @@ Django Codenerix Email v{}
 
                 # Prepare message ID info
                 ecid = email_message.uuid.hex
-                edomain = settings.EMAIL_FROM.split("@")[-1]
+                edomain = email_domain(
+                    getattr(settings, "EMAIL_FROM", None)
+                    or settings.DEFAULT_FROM_EMAIL,
+                )
                 ets = int(timezone.now().timestamp())
                 email_message.headers = {
                     "Message-ID": f"<{ecid}-{ets}@{edomain}>",
@@ -155,7 +158,10 @@ Django Codenerix Email v{}
 
             # Prepare message ID info
             ecid = email_message.uuid.hex
-            edomain = settings.EMAIL_FROM.split("@")[-1]
+            edomain = email_domain(
+                getattr(settings, "EMAIL_FROM", None)
+                or settings.DEFAULT_FROM_EMAIL,
+            )
             ets = int(timezone.now().timestamp())
             email_message.headers = {
                 "Message-ID": f"<{ecid}-{ets}@{edomain}>",
