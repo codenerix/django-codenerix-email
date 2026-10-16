@@ -18,30 +18,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import ssl
-import smtplib
 import logging
-from uuid import uuid4
-from typing import Optional
+import re
+import smtplib
+import ssl
 from email.utils import parseaddr
+from typing import Optional
+from uuid import uuid4
 
-from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
-from django.db import models
-from django.template import Context, Template
-from django.core.exceptions import ValidationError
-from django.conf import settings
-from django.db.models import Q
-from django.utils.safestring import SafeString
-
-from codenerix.models import CodenerixModel
+from codenerix.fields import WysiwygAngularField
 from codenerix.helpers import obj_to_html
 from codenerix.lib.genmail import (  # noqa: N817
     EmailMessage as EM,
+)
+from codenerix.lib.genmail import (
     get_connection,
 )
-from codenerix.fields import WysiwygAngularField
+from codenerix.models import CodenerixModel
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.db.models import Q
+from django.template import Context, Template
+from django.utils import timezone
+from django.utils.safestring import SafeString
+from django.utils.translation import gettext_lazy as _
 
 CONTENT_SUBTYPE_PLAIN = "plain"
 CONTENT_SUBTYPE_HTML = "html"
@@ -89,30 +90,20 @@ class EmailMessage(CodenerixModel):
     )
     efrom = models.EmailField(_("From"), blank=False, null=False)
     eto = models.EmailField(_("To"), blank=False, null=False)
-    subject = models.CharField(
-        _("Subject"), max_length=256, blank=False, null=False
-    )
+    subject = models.CharField(_("Subject"), max_length=256, blank=False, null=False)
     body = models.TextField(_("Body"), blank=False, null=False)
     priority = models.PositiveIntegerField(
         _("Priority"), blank=False, null=False, default=5
     )
-    sending = models.BooleanField(
-        _("Sending"), blank=False, null=False, default=False
-    )
-    sent = models.BooleanField(
-        _("Sent"), blank=False, null=False, default=False
-    )
-    error = models.BooleanField(
-        _("Error"), blank=False, null=False, default=False
-    )
+    sending = models.BooleanField(_("Sending"), blank=False, null=False, default=False)
+    sent = models.BooleanField(_("Sent"), blank=False, null=False, default=False)
+    error = models.BooleanField(_("Error"), blank=False, null=False, default=False)
     retries = models.PositiveIntegerField(
         _("Retries"), blank=False, null=False, default=0
     )
     next_retry = models.DateTimeField(_("Next retry"), auto_now_add=True)
     log = models.TextField(_("Log"), blank=True, null=True)
-    opened = models.DateTimeField(
-        _("Opened"), null=True, blank=True, default=None
-    )
+    opened = models.DateTimeField(_("Opened"), null=True, blank=True, default=None)
     content_subtype = models.CharField(
         _("Content Subtype"),
         max_length=256,
@@ -121,9 +112,7 @@ class EmailMessage(CodenerixModel):
         null=False,
         default=CONTENT_SUBTYPE_HTML,
     )
-    unsubscribe_url = models.URLField(
-        _("Unsubscribe URL"), blank=True, null=True
-    )
+    unsubscribe_url = models.URLField(_("Unsubscribe URL"), blank=True, null=True)
     headers = models.JSONField(_("Headers"), blank=True, null=True)
     bounces_soft = models.PositiveIntegerField(
         _("Soft bounces"), blank=False, null=False, default=0
@@ -138,9 +127,7 @@ class EmailMessage(CodenerixModel):
     def recalculate_bounces(self):
         bounces_soft = self.receiveds.filter(bounce_type=BOUNCE_SOFT).count()
         bounces_hard = self.receiveds.filter(bounce_type=BOUNCE_HARD).count()
-        bounces_total = self.receiveds.filter(
-            bounce_type__isnull=False
-        ).count()
+        bounces_total = self.receiveds.filter(bounce_type__isnull=False).count()
         changed = False
         if self.bounces_soft != bounces_soft:
             self.bounces_soft = bounces_soft
@@ -278,8 +265,7 @@ class EmailMessage(CodenerixModel):
             # right. parseaddr() extracts the bare address whatever the
             # format, and DEFAULT_FROM_EMAIL covers EMAIL_FROM being unset.
             edomain = email_domain(
-                getattr(settings, "EMAIL_FROM", None)
-                or settings.DEFAULT_FROM_EMAIL,
+                getattr(settings, "EMAIL_FROM", None) or settings.DEFAULT_FROM_EMAIL,
             )
             ets = int(timezone.now().timestamp())
             ensure_header(
@@ -322,9 +308,7 @@ class EmailMessage(CodenerixModel):
         return headers
 
     @classmethod
-    def process_queue(
-        cls, connection=None, legacy=False, silent=True, debug=False
-    ):
+    def process_queue(cls, connection=None, legacy=False, silent=True, debug=False):
         """
         This method will process all the emails in the queue
         """
@@ -410,9 +394,7 @@ class EmailMessage(CodenerixModel):
         )
 
     def connect(self, legacy=False):
-        (connection, self.__connect_info) = EmailMessage.internal_connect(
-            legacy
-        )
+        (connection, self.__connect_info) = EmailMessage.internal_connect(legacy)
         return connection
 
     def send(
@@ -466,9 +448,7 @@ class EmailMessage(CodenerixModel):
                 # Set we just made a new retry
                 self.retries += 1
                 self.next_retry = timezone.now() + timezone.timedelta(
-                    seconds=getattr(
-                        settings, "CLIENT_EMAIL_RETRIES_WAIT", 5400
-                    )
+                    seconds=getattr(settings, "CLIENT_EMAIL_RETRIES_WAIT", 5400)
                 )  # retry every 1.5h
                 if self.retries >= getattr(
                     settings, "CLIENT_EMAIL_RETRIES", 10
@@ -539,10 +519,8 @@ class EmailMessage(CodenerixModel):
                             self.log = ""
                         self.log += f"{error}\n"
                     finally:
-
                         # Retry if error
                         if error:
-
                             # One chance less
                             retries -= 1
                             # Check if this is the last try
@@ -553,14 +531,11 @@ class EmailMessage(CodenerixModel):
                                 self.priority += 1
                                 # Set we just made a new retry
                                 self.retries += 1
-                                self.next_retry = (
-                                    timezone.now()
-                                    + timezone.timedelta(
-                                        seconds=getattr(
-                                            settings,
-                                            "CLIENT_EMAIL_RETRIES_WAIT",
-                                            5400,
-                                        )
+                                self.next_retry = timezone.now() + timezone.timedelta(
+                                    seconds=getattr(
+                                        settings,
+                                        "CLIENT_EMAIL_RETRIES_WAIT",
+                                        5400,
                                     )
                                 )  # retry every 1.5h
                                 if self.retries >= getattr(
@@ -584,12 +559,8 @@ class EmailAttachment(CodenerixModel):
         null=False,
         related_name="attachments",
     )
-    filename = models.CharField(
-        _("Filename"), max_length=256, blank=False, null=False
-    )
-    mime = models.CharField(
-        _("Mimetype"), max_length=256, blank=False, null=False
-    )
+    filename = models.CharField(_("Filename"), max_length=256, blank=False, null=False)
+    mime = models.CharField(_("Mimetype"), max_length=256, blank=False, null=False)
     path = models.FileField(_("Path"), blank=False, null=False)
 
     def __fields__(self, info):
@@ -602,9 +573,7 @@ class EmailAttachment(CodenerixModel):
 
 
 class EmailReceived(CodenerixModel):
-    imap_id = models.IntegerField(
-        _("IMAP ID"), blank=False, null=False, default=0
-    )
+    imap_id = models.IntegerField(_("IMAP ID"), blank=False, null=False, default=0)
     eid = models.CharField(
         _("Message ID"),
         max_length=512,
@@ -613,9 +582,7 @@ class EmailReceived(CodenerixModel):
     )
     efrom = models.EmailField(_("From"), blank=False, null=False)
     eto = models.EmailField(_("To"), blank=False, null=False)
-    subject = models.CharField(
-        _("Subject"), max_length=256, blank=False, null=False
-    )
+    subject = models.CharField(_("Subject"), max_length=256, blank=False, null=False)
     headers = models.JSONField(_("Headers"), blank=True, null=True)
     body_text = models.TextField(_("Body (Text)"), blank=True, null=False)
     body_html = models.TextField(_("Body (HTML)"), blank=True, null=False)
@@ -756,9 +723,7 @@ class EmailTemplate(CodenerixModel):
 
         e = EmailMessage()
         context["CDNX_EMAIL_emsg_uuid"] = e.uuid
-        e.subject = Template(getattr(self, lang).subject).render(
-            Context(context)
-        )
+        e.subject = Template(getattr(self, lang).subject).render(Context(context))
         e.body = Template(getattr(self, lang).body).render(Context(context))
         e.efrom = Template(self.efrom).render(Context(context))
         e.content_subtype = self.content_subtype
@@ -770,10 +735,7 @@ class EmailTemplate(CodenerixModel):
             self.cid = self.cid.upper()
             if len(re.findall(r"[A-Za-z0-9]+", self.cid)) != 1:
                 raise ValidationError(
-                    _(
-                        "CID can contains only number and letters with "
-                        "no spaces"
-                    )
+                    _("CID can contains only number and letters with no spaces")
                 )
 
 
