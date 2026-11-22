@@ -2,6 +2,10 @@
 django-codenerix-email
 ======================
 
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=codenerix_django-codenerix-email&metric=alert_status
+    :target: https://sonarcloud.io/summary/new_code?id=codenerix_django-codenerix-email
+    :alt: Quality Gate
+
 Codenerix Email is a module that enables `CODENERIX <https://www.codenerix.com/>`_ to set send emails in a general manner.
 
 .. image:: https://github.com/codenerix/django-codenerix/raw/master/codenerix/static/codenerix/img/codenerix.png
